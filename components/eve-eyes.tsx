@@ -7,7 +7,7 @@ type EveEyesProps = {
 
 export function EveEyes({ state }: EveEyesProps) {
   return (
-    // This container gets the floating animation
+    // This container gets the floating animation when idle
     <div className={cn("eye-container", state === "idle" && "animate-float")}>
       {/* These are the two divs for the eyes. */}
       {/* They get classes based on the current state. */}
