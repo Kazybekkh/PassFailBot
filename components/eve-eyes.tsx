@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils"
-import type { EyeState } from "@/types" // Assuming EyeState is declared in a separate file
+
+export type EyeState = "idle" | "focused" | "win" | "lose"
 
 type EveEyesProps = {
   state: EyeState
@@ -9,8 +10,6 @@ export function EveEyes({ state }: EveEyesProps) {
   return (
     // This container gets the floating animation when idle
     <div className={cn("eye-container", state === "idle" && "animate-float")}>
-      {/* These are the two divs for the eyes. */}
-      {/* They get classes based on the current state. */}
       <div
         className={cn(
           "eye",

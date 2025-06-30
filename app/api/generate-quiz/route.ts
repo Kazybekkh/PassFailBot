@@ -8,7 +8,6 @@ export const maxDuration = 60 // seconds – extends the default timeout
 
 export async function POST(req: Request) {
   try {
-    // 1. Get the uploaded file from the multipart/form-data request
     const formData = await req.formData()
     const file = formData.get("file") as File | null
 
@@ -19,7 +18,6 @@ export async function POST(req: Request) {
       })
     }
 
-    // 2. Generate a structured quiz with the AI SDK
     const { object: quiz } = await generateObject({
       model: openai("gpt-4o"),
       schema: z.object({
@@ -55,7 +53,6 @@ export async function POST(req: Request) {
       ],
     })
 
-    // 3. Return the quiz as JSON
     return new Response(JSON.stringify(quiz), {
       status: 200,
       headers: { "Content-Type": "application/json" },
