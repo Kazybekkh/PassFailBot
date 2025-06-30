@@ -1,5 +1,5 @@
 import { generateObject } from "ai"
-import { createGroq } from "@ai-sdk/groq"
+import { createGoogle } from "@ai-sdk/google"
 import { z } from "zod"
 
 /* -------------------------------------------------------------------------- */
@@ -53,24 +53,37 @@ export async function POST(req: Request) {
     if (!style) return jsonError("Quiz style missing.")
     if (file.size > MAX_FILE_BYTES) return jsonError("PDF exceeds 8 MB.", 413)
 
-    /* 2. Check for Groq API Key ---------------------------------------- */
-    if (!process.env.GROQ_API_KEY) {
-      return jsonError("Groq API key not configured.", 500)
+    /* 2. Check for Google API Key ---------------------------------------- */
+    if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+      return jsonError("Google API key not configured.", 500)
     }
 
-    /* 3. Generate quiz with Groq based on filename --------------------- */
-    const groq = createGroq({ apiKey: process.env.GROQ_API_KEY })
-    const model = groq("llama3-70b-8192") // Use a powerful model for generation
+    /* 3. Generate quiz with Gemini from PDF content -------------------- */
+    const google = createGoogle({ apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY })
+    const model = google("models/gemini-1.5-pro-latest")
 
-    // IMPORTANT: Groq cannot read PDF files. The prompt must rely on the filename.
-    const promptStrict = `Based on the filename "${file.name}", generate 10 multiple-choice questions. The questions should be what one might expect from a document with this name.`
-    const promptSimilar = `Based on the filename "${file.name}", invent 10 new multiple-choice questions on the likely topic and difficulty.`
+    const promptStrict = "Generate 10 multiple-choice questions strictly from the provided PDF content."
+    const promptSimilar =
+      "Invent 10 new multiple-choice questions on the same topic and difficulty as the provided PDF."
     const prompt = style === "strict" ? promptStrict : promptSimilar
 
     const { object } = await generateObject({
       model,
       schema: QUIZ_SCHEMA,
-      prompt,
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: prompt },
+            {
+              type: "file",
+              data: await file.arrayBuffer(),
+              mimeType: "application/pdf",
+              filename: file.name,
+            },
+          ],
+        },
+      ],
     })
 
     return Response.json(object)
