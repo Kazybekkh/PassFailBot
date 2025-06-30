@@ -766,10 +766,12 @@ export default function PassFailBot() {
   }
 
   return (
-    <main className="grid lg:grid-cols-3 gap-8 min-h-screen items-start lg:items-center p-4 sm:p-8 bg-gray-50">
-      <div className="lg:col-span-2 w-full flex items-center justify-center">{renderContent()}</div>
-      <div className="hidden lg:block w-full max-w-sm justify-self-center">
-        <StatsPanel coins={coins} lastBet={lastBet} />
+    <main className="flex flex-col lg:flex-row gap-8 min-h-screen items-center p-4 sm:p-8 bg-gray-50">
+      <div className="w-full lg:flex-1 flex items-center justify-center">{renderContent()}</div>
+      <div className="hidden lg:flex w-full lg:max-w-sm justify-center">
+        <div className="w-full">
+          <StatsPanel coins={coins} lastBet={lastBet} />
+        </div>
       </div>
     </main>
   )
