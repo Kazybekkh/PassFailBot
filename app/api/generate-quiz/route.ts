@@ -7,6 +7,17 @@ export const runtime = 'nodejs'
 
 export async function POST(req: Request) {
   try {
+    // Check if API key is configured
+    if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+      console.error('Google AI API key not found in environment variables')
+      return new Response(JSON.stringify({ 
+        error: "API configuration error. Please check server configuration." 
+      }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      })
+    }
+
     const formData = await req.formData()
     const file = formData.get("file") as File
     const quizStyle = formData.get("style") as "strict" | "similar" // UPDATED: Get style from form data
@@ -38,6 +49,22 @@ export async function POST(req: Request) {
       })
     }
 
+    console.log('Processing file for quiz:', file.name, 'Size:', file.size, 'Style:', quizStyle)
+
+    let fileData: ArrayBuffer
+    try {
+      fileData = await file.arrayBuffer()
+      console.log('File buffer created successfully, size:', fileData.byteLength)
+    } catch (fileError) {
+      console.error('Failed to process file buffer:', fileError)
+      return new Response(JSON.stringify({ 
+        error: "Failed to process uploaded file. Please try again." 
+      }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      })
+    }
+
     // UPDATED: Define different prompts based on the selected style (optimized for faster processing)
     const strictPrompt =
       "Generate a 10-question multiple-choice quiz from this PDF. Each question needs 4 options with the correct answer specified."
@@ -45,6 +72,7 @@ export async function POST(req: Request) {
       "Create a 10-question multiple-choice quiz similar in style to this PDF content, but with new questions. Use plain text (no LaTeX). Each question needs 4 options with the correct answer specified."
     const promptText = quizStyle === "similar" ? similarPrompt : strictPrompt
 
+    console.log('Starting Gemini API call for quiz generation...')
     const { object: quiz } = await generateObject({
       model: google("gemini-1.5-flash"),
       schema: z.object({
@@ -68,7 +96,7 @@ export async function POST(req: Request) {
             },
             {
               type: "file",
-              data: await file.arrayBuffer(),
+              data: fileData,
               mimeType: "application/pdf",
               filename: file.name,
             },
@@ -76,13 +104,18 @@ export async function POST(req: Request) {
         },
       ],
     })
+    console.log('Quiz generation successful, questions generated:', quiz.questions.length)
 
     return new Response(JSON.stringify(quiz), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     })
   } catch (error: any) {
-    console.error(error)
+    console.error('Quiz generation error:', error)
+    console.error('Error type:', typeof error)
+    console.error('Error name:', error?.name)
+    console.error('Error message:', error?.message)
+    console.error('Error stack:', error?.stack)
     
     // Check if it's a quota/rate limit error
     if (error?.message?.includes('quota') || error?.message?.includes('rate limit')) {
@@ -94,7 +127,30 @@ export async function POST(req: Request) {
       })
     }
     
-    return new Response(JSON.stringify({ error: "Failed to generate quiz." }), {
+    // Check for authentication errors
+    if (error?.message?.includes('API key') || error?.message?.includes('authentication')) {
+      return new Response(JSON.stringify({ 
+        error: "API authentication failed. Please check your Google AI API key." 
+      }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      })
+    }
+    
+    // Check for network/timeout errors
+    if (error?.message?.includes('timeout') || error?.message?.includes('network')) {
+      return new Response(JSON.stringify({ 
+        error: "Network timeout. Please try again with a smaller PDF." 
+      }), {
+        status: 504,
+        headers: { "Content-Type": "application/json" },
+      })
+    }
+    
+    return new Response(JSON.stringify({ 
+      error: "Failed to generate quiz.",
+      details: error?.message || "Unknown error"
+    }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     })
