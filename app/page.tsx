@@ -1,9 +1,8 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect, useRef, useCallback } from "react"
-import { Upload, Coins, Target, Clock, AlertTriangle, ArrowRight } from "lucide-react"
+import { Upload, Coins, Target, Clock, AlertTriangle, ArrowRight, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
@@ -12,6 +11,7 @@ import { cn } from "@/lib/utils"
 import { RobotScene, type EyeState } from "@/components/robot-scene"
 
 type GameState = "config" | "loading" | "quiz" | "result" | "cheated"
+type ConfigStep = "upload" | "target" | "bet" | "duration" | "confirm"
 
 type Question = {
   question: string
@@ -23,14 +23,20 @@ type Quiz = {
   questions: Question[]
 }
 
+const initialBotMessage = "Hello! First, upload the PDF you want to be quizzed on."
+
 export default function PassFailBot() {
   const [gameState, setGameState] = useState<GameState>("config")
+  const [configStep, setConfigStep] = useState<ConfigStep>("upload")
   const [eyeState, setEyeState] = useState<EyeState>("idle")
+  const [botMessage, setBotMessage] = useState<string>(initialBotMessage)
+
   const [pdfFile, setPdfFile] = useState<File | null>(null)
   const [targetScore, setTargetScore] = useState(50)
   const [betAmount, setBetAmount] = useState(100)
   const [duration, setDuration] = useState(15)
   const [coins, setCoins] = useState(1000)
+
   const [error, setError] = useState<string | null>(null)
   const [quiz, setQuiz] = useState<Quiz | null>(null)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
@@ -88,9 +94,11 @@ export default function PassFailBot() {
     if (file && file.type === "application/pdf") {
       setPdfFile(file)
       setError(null)
+      setBotMessage(`Got it! "${file.name}" is locked in.`)
     } else {
       setPdfFile(null)
       setError("Please upload a valid PDF file.")
+      setBotMessage("Whoops, that's not a PDF. Try again!")
     }
   }
 
@@ -168,22 +176,238 @@ export default function PassFailBot() {
       const calculatedPayout = Math.floor(betAmount * (1 + targetScore / 100))
       setPayout(calculatedPayout)
       setCoins((prev) => prev + calculatedPayout)
-      setEyeState("win") // This triggers the 'win' look
+      setEyeState("win")
     } else {
       setPayout(0)
-      setEyeState("lose") // This triggers the 'lose' look
+      setEyeState("lose")
     }
     setGameState("result")
   }
 
   const handlePlayAgain = () => {
     setGameState("config")
+    setConfigStep("upload")
     setPdfFile(null)
     setQuiz(null)
     setCurrentQuestionIndex(0)
     setUserAnswers([])
     setError(null)
     setEyeState("idle")
+    setBotMessage(initialBotMessage)
+  }
+
+  const handleNextStep = () => {
+    triggerEyeState("focused")
+    switch (configStep) {
+      case "upload":
+        setConfigStep("target")
+        setBotMessage("Okay, what's your target score? Use the slider to set a goal.")
+        break
+      case "target":
+        setConfigStep("bet")
+        setBotMessage("Time to raise the stakes. How many coins will you bet?")
+        break
+      case "bet":
+        setConfigStep("duration")
+        setBotMessage("How much time do you need? Choose a duration.")
+        break
+      case "duration":
+        setConfigStep("confirm")
+        setBotMessage("Alright, here's the plan. Does this look right?")
+        break
+    }
+  }
+
+  const handlePrevStep = () => {
+    triggerEyeState("focused")
+    switch (configStep) {
+      case "target":
+        setConfigStep("upload")
+        setBotMessage(initialBotMessage)
+        break
+      case "bet":
+        setConfigStep("target")
+        setBotMessage("Okay, what's your target score? Use the slider to set a goal.")
+        break
+      case "duration":
+        setConfigStep("bet")
+        setBotMessage("Time to raise the stakes. How many coins will you bet?")
+        break
+      case "confirm":
+        setConfigStep("duration")
+        setBotMessage("How much time do you need? Choose a duration.")
+        break
+    }
+  }
+
+  const handleTargetChange = (value: number) => {
+    setTargetScore(value)
+    if (value === 100) {
+      setBotMessage("100%! Are you sure you're up for the challenge?")
+    } else if (value >= 70) {
+      setBotMessage("Feeling confident, huh? A worthy goal.")
+    } else if (value >= 40) {
+      setBotMessage("A reasonable target. Let's see if you can hit it.")
+    } else {
+      setBotMessage("Playing it safe, I see. Smart move.")
+    }
+  }
+
+  const handleBetChange = (value: number) => {
+    setBetAmount(value)
+    const ratio = value / coins
+    if (ratio === 1) {
+      setBotMessage("All in! Fortune favors the bold.")
+    } else if (ratio > 0.75) {
+      setBotMessage("Going big! I like your style.")
+    } else if (ratio > 0.25) {
+      setBotMessage("A respectable bet. Good luck.")
+    } else {
+      setBotMessage("A small, cautious wager. I understand.")
+    }
+  }
+
+  const handleDurationChange = (value: number) => {
+    setDuration(value)
+    if (value >= 60) {
+      setBotMessage("An hour should be plenty of time. No pressure!")
+    } else if (value >= 30) {
+      setBotMessage(`${value} minutes. A good amount of time to focus.`)
+    } else {
+      setBotMessage(`${value} minutes. Quick and decisive!`)
+    }
+  }
+
+  const renderConfigStep = () => {
+    return (
+      <div className="flex flex-col items-center gap-4">
+        <RobotScene eyeState={eyeState} />
+        <Card className="w-full max-w-md pixel-border bg-card/90 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-center text-lg leading-relaxed font-normal p-4 h-24 flex items-center justify-center">
+              {botMessage}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6 pt-2">
+            {configStep === "upload" && (
+              <div>
+                <label
+                  htmlFor="file-upload"
+                  className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-secondary"
+                >
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <Upload size={32} />
+                    <p className="mt-2 text-sm">{pdfFile ? pdfFile.name : "Upload Lecture PDF"}</p>
+                  </div>
+                  <input
+                    id="file-upload"
+                    type="file"
+                    className="hidden"
+                    accept="application/pdf"
+                    onChange={handleFileChange}
+                  />
+                </label>
+              </div>
+            )}
+
+            {configStep === "target" && (
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <label>
+                    <Target className="inline mr-2 text-fail" size={16} />
+                    Target Score
+                  </label>
+                  <span>{targetScore}%</span>
+                </div>
+                <Slider value={[targetScore]} onValueChange={([v]) => handleTargetChange(v)} step={10} />
+              </div>
+            )}
+
+            {configStep === "bet" && (
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <label>
+                    <Coins className="inline mr-2 text-coin" size={16} />
+                    Bet Amount
+                  </label>
+                  <span>
+                    {betAmount} (Balance: {coins})
+                  </span>
+                </div>
+                <Slider
+                  value={[betAmount]}
+                  onValueChange={([v]) => handleBetChange(v)}
+                  min={10}
+                  max={coins}
+                  step={10}
+                />
+              </div>
+            )}
+
+            {configStep === "duration" && (
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <label>
+                    <Clock className="inline mr-2 text-pass" size={16} />
+                    Duration
+                  </label>
+                  <span>{duration} min</span>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {[15, 30, 45, 60].map((d) => (
+                    <Button
+                      key={d}
+                      variant={duration === d ? "default" : "outline"}
+                      onClick={() => handleDurationChange(d)}
+                    >
+                      {d}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {configStep === "confirm" && (
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span>PDF:</span> <span>{pdfFile?.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Target:</span> <span>{targetScore}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Bet:</span> <span>{betAmount} coins</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Duration:</span> <span>{duration} min</span>
+                </div>
+              </div>
+            )}
+
+            {error && <p className="text-fail text-sm text-center">{error}</p>}
+
+            <div className="flex justify-between w-full pt-4">
+              {configStep !== "upload" ? (
+                <Button variant="outline" onClick={handlePrevStep}>
+                  <ArrowLeft className="mr-2" size={16} /> Back
+                </Button>
+              ) : (
+                <div /> // Placeholder for alignment
+              )}
+              {configStep !== "confirm" ? (
+                <Button onClick={handleNextStep} disabled={configStep === "upload" && !pdfFile}>
+                  Next <ArrowRight className="ml-2" size={16} />
+                </Button>
+              ) : (
+                <Button className="w-full" onClick={handleStartQuiz}>
+                  Start Quiz!
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   const renderContent = () => {
@@ -296,106 +520,7 @@ export default function PassFailBot() {
         )
       case "config":
       default:
-        return (
-          <div className="flex flex-col items-center gap-4">
-            <RobotScene eyeState={eyeState} />
-            <Card className="w-full max-w-md pixel-border bg-card/90 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-center text-3xl">PassFailBot</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6 pt-6">
-                <div>
-                  <label
-                    htmlFor="file-upload"
-                    className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-secondary"
-                  >
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <Upload size={32} />
-                      <p className="mt-2 text-sm">{pdfFile ? pdfFile.name : "Upload Lecture PDF"}</p>
-                    </div>
-                    <input
-                      id="file-upload"
-                      type="file"
-                      className="hidden"
-                      accept="application/pdf"
-                      onChange={handleFileChange}
-                    />
-                  </label>
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <label>
-                      <Target className="inline mr-2 text-fail" size={16} />
-                      Target Score
-                    </label>
-                    <span>{targetScore}%</span>
-                  </div>
-                  <Slider
-                    value={[targetScore]}
-                    onValueChange={([v]) => {
-                      triggerEyeState("focused")
-                      setTargetScore(v)
-                    }}
-                    step={10}
-                  />
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <label>
-                      <Coins className="inline mr-2 text-coin" size={16} />
-                      Bet Amount
-                    </label>
-                    <span>
-                      {betAmount} (Balance: {coins})
-                    </span>
-                  </div>
-                  <Slider
-                    value={[betAmount]}
-                    onValueChange={([v]) => {
-                      triggerEyeState("focused")
-                      setBetAmount(v)
-                    }}
-                    min={10}
-                    max={coins}
-                    step={10}
-                  />
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <label>
-                      <Clock className="inline mr-2 text-pass" size={16} />
-                      Duration
-                    </label>
-                    <span>{duration} min</span>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2">
-                    {[15, 30, 45, 60].map((d) => (
-                      <Button
-                        key={d}
-                        variant={duration === d ? "default" : "outline"}
-                        onClick={() => {
-                          triggerEyeState("focused")
-                          setDuration(d)
-                        }}
-                      >
-                        {d}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-
-                {error && <p className="text-fail text-sm text-center">{error}</p>}
-
-                <Button className="w-full" onClick={handleStartQuiz} disabled={!pdfFile}>
-                  Start Quiz
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        )
+        return renderConfigStep()
     }
   }
 
