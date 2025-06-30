@@ -124,11 +124,23 @@ export async function POST(req: Request) {
 
     /* 5. Tolerant JSON parsing & validation ------------------------------- */
     const raw = fullText.trim()
+    console.log("--- RAW AI RESPONSE ---")
+    console.log(raw)
+    console.log("-----------------------")
+
     const parsed = extractJson(raw)
+    console.log("--- PARSED JSON ---")
+    console.log(JSON.stringify(parsed, null, 2))
+    console.log("-------------------")
+
     const quiz = QUIZ_SCHEMA.safeParse(parsed)
 
     if (!quiz.success) {
       console.warn("AI returned unparsable quiz. Falling back.")
+      // ADDED: Log the Zod validation error for debugging
+      console.error("--- ZOD VALIDATION ERROR ---")
+      console.error(quiz.error.format())
+      console.error("----------------------------")
       return Response.json({
         fallback: true,
         error: "Invalid JSON returned from model.",
