@@ -9,9 +9,7 @@ type RobotSceneProps = {
 }
 
 export function RobotScene({ eyeState }: RobotSceneProps) {
-  return (
-    <div className="robot-head-container">
-      <EveEyes state={eyeState} />
-    </div>
-  )
+  // The wrapper div was removed to simplify the component.
+  // The floating animation is now handled directly in EveEyes.
+  return <EveEyes state={eyeState} />
 }

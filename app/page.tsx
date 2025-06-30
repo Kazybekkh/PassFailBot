@@ -259,7 +259,7 @@ export default function PassFailBot() {
       <RobotScene eyeState={eyeState} />
       <DialogueBox text={botMessage} />
 
-      <Card className="w-full max-w-md pixel-border bg-card/90 backdrop-blur-sm">
+      <Card className="w-full max-w-md pixel-border bg-card/80 backdrop-blur-md mt-4">
         <CardContent className="space-y-6 pt-6">
           {/* STEP: upload */}
           {configStep === "upload" && (
@@ -401,20 +401,20 @@ export default function PassFailBot() {
         const q = quiz.questions[currentQuestionIndex]
         return (
           <Card className="w-full max-w-4xl pixel-border bg-card/90 backdrop-blur-sm">
-            <CardContent>
+            <CardContent className="p-6">
               <div className="border-b-4 border-double pb-4 mb-4 text-sm flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  <Coins size={20} />
+                  <Coins size={20} className="text-coin" />
                   <span>{coins}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Clock size={20} />
+                  <Clock size={20} className="text-pass" />
                   <span>
                     {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, "0")}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Target size={20} />
+                  <Target size={20} className="text-fail" />
                   <span>Target: {targetScore}%</span>
                 </div>
               </div>
