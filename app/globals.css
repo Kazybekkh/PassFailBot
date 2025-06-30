@@ -72,9 +72,9 @@
 
   .dialogue-box {
     @apply relative w-full min-h-[8rem] mb-6
-           p-4 border-2 border-border bg-card text-card-foreground
-           text-lg leading-relaxed font-normal
-           flex items-center justify-center text-center rounded-lg;
+         p-4 border-2 border-border bg-card text-card-foreground
+         text-lg leading-relaxed font-normal
+         flex items-center justify-center text-center rounded-lg;
   }
 
   .dialogue-caret {
