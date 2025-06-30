@@ -14,6 +14,7 @@ import {
   BookOpen,
   CheckCircle,
   XCircle,
+  Loader2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -22,7 +23,7 @@ import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
 import { useTypewriter } from "@/hooks/use-typewriter"
 
-type GameState = "config" | "loading" | "quiz" | "result" | "cheated" | "review" // UPDATED: Added 'review' state
+type GameState = "config" | "loading" | "quiz" | "result" | "cheated" | "review"
 type ConfigStep = "upload" | "style" | "target" | "bet" | "duration" | "confirm"
 type EyeState = "idle" | "focused" | "win" | "lose"
 type QuizStyle = "strict" | "similar"
@@ -148,6 +149,7 @@ export default function PassFailBot() {
   const [configStep, setConfigStep] = useState<ConfigStep>("upload")
   const [eyeState, setEyeState] = useState<EyeState>("idle")
   const [botMessage, setBotMessage] = useState(initialBotMessage)
+  const [isIdentifyingTopic, setIsIdentifyingTopic] = useState(false) // UPDATED: State for topic identification
 
   const [pdfFile, setPdfFile] = useState<File | null>(null)
   const [quizStyle, setQuizStyle] = useState<QuizStyle | null>(null)
@@ -209,16 +211,42 @@ export default function PassFailBot() {
   }, [gameState, timeLeft])
 
   /* ──────────────────── config helpers ─────────────────── */
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file && file.type === "application/pdf") {
-      setPdfFile(file)
-      setError(null)
-      setBotMessage(`Got it! "${file.name}" is locked and loaded.`)
-    } else {
+    if (!file || file.type !== "application/pdf") {
       setPdfFile(null)
       setError("Please upload a valid PDF file.")
       setBotMessage("Whoops, that doesn't look like a PDF. Please try again.")
+      return
+    }
+
+    setPdfFile(file)
+    setError(null)
+    setIsIdentifyingTopic(true)
+    setBotMessage("Let's see what we have here... Analyzing your document.")
+    triggerEyeState("focused")
+
+    const formData = new FormData()
+    formData.append("file", file)
+
+    try {
+      const res = await fetch("/api/identify-topic", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!res.ok) {
+        throw new Error("Could not identify the topic.")
+      }
+
+      const { topic } = await res.json()
+      setBotMessage(`Got it! Looks like we're studying '${topic}'. Your file "${file.name}" is locked and loaded.`)
+    } catch (err) {
+      console.error(err)
+      setBotMessage(`Got it! Your file "${file.name}" is locked and loaded.`) // Fallback message
+    } finally {
+      setIsIdentifyingTopic(false)
+      setEyeState("idle")
     }
   }
 
@@ -421,11 +449,16 @@ export default function PassFailBot() {
           {configStep === "upload" && (
             <label
               htmlFor="file-upload"
-              className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-secondary"
+              className={cn(
+                "flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-secondary",
+                isIdentifyingTopic && "cursor-not-allowed opacity-50",
+              )}
             >
               <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                <Upload size={32} />
-                <p className="mt-2 text-sm">{pdfFile ? pdfFile.name : "Upload Lecture PDF"}</p>
+                {isIdentifyingTopic ? <Loader2 className="animate-spin" size={32} /> : <Upload size={32} />}
+                <p className="mt-2 text-sm">
+                  {isIdentifyingTopic ? "Analyzing..." : pdfFile ? pdfFile.name : "Upload Lecture PDF"}
+                </p>
               </div>
               <input
                 id="file-upload"
@@ -433,6 +466,7 @@ export default function PassFailBot() {
                 className="hidden"
                 accept="application/pdf"
                 onChange={handleFileChange}
+                disabled={isIdentifyingTopic}
               />
             </label>
           )}
@@ -543,7 +577,10 @@ export default function PassFailBot() {
             {configStep !== "confirm" ? (
               <Button
                 onClick={handleNextStep}
-                disabled={(configStep === "upload" && !pdfFile) || (configStep === "style" && !quizStyle)}
+                disabled={
+                  (configStep === "upload" && (!pdfFile || isIdentifyingTopic)) ||
+                  (configStep === "style" && !quizStyle)
+                }
               >
                 Next <ArrowRight className="ml-2" size={16} />
               </Button>
@@ -656,7 +693,7 @@ export default function PassFailBot() {
           </div>
         )
 
-      case "review": // NEW: Review screen case
+      case "review":
         if (!quiz) return null
         return (
           <Card className="w-full max-w-4xl">
