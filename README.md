@@ -1,6 +1,13 @@
 
 **PassFailBot** – An AI-powered study companion that converts any uploaded PDF into a timed multiple-choice quiz. Wager virtual coins on your target score and either win big or lose it all based on your performance.
 
+DEMO
+
+
+Uploading Screen Recording 2025-06-30 at 9.47.46 PM.mov…
+
+
+
 🔗 **Repository:** [https://github.com/Kazybekkh/PassFailBot.git](https://github.com/Kazybekkh/PassFailBot.git)
 
 ## Tech Stack
