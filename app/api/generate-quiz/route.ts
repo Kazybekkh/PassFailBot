@@ -1,8 +1,7 @@
-import { streamText } from "ai" // Changed from generateText
+import { generateObject, NoObjectGeneratedError } from "ai"
 import { createAnthropic } from "@ai-sdk/anthropic"
 import { openai } from "@ai-sdk/openai"
 import { z } from "zod"
-import type { ZodError } from "zod"
 
 /* -------------------------------------------------------------------------- */
 /*  CONFIG                                                                    */
@@ -40,51 +39,6 @@ function jsonError(msg: string, status = 400) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  HELPERS                                                                   */
-/* -------------------------------------------------------------------------- */
-
-/** Attempts to coerce any loosely-shaped data into a QUIZ_SCHEMA-compatible object */
-function sanitizeQuiz(maybe: any): unknown {
-  if (!maybe || typeof maybe !== "object" || !Array.isArray(maybe.questions)) return maybe
-
-  const fixString = (v: unknown) => (typeof v === "string" ? v.trim() : String(v ?? ""))
-
-  const fixed = {
-    questions: maybe.questions
-      .filter((q: any) => q) // drop null / undefined
-      .slice(0, 12) // hard cap 12
-      .map((q: any) => {
-        const opts: string[] = Array.isArray(q.options) ? q.options : []
-        // Trim/pad to exactly 4 options
-        const fullOpts = [...opts.map(fixString)].slice(0, 4)
-        while (fullOpts.length < 4) fullOpts.push("N/A")
-
-        let ans = fixString(q.answer)
-        if (!fullOpts.includes(ans)) ans = fullOpts[0]
-
-        return {
-          question: fixString(q.question),
-          options: fullOpts,
-          answer: ans,
-        }
-      }),
-  }
-
-  return fixed
-}
-
-function extractJson(raw: string): any | null {
-  // Grab the first {...} block in the text
-  const match = raw.match(/\{[\s\S]*\}/)
-  if (!match) return null
-  try {
-    return JSON.parse(match[0])
-  } catch {
-    return null
-  }
-}
-
-/* -------------------------------------------------------------------------- */
 /*  ROUTE                                                                     */
 /* -------------------------------------------------------------------------- */
 
@@ -104,13 +58,9 @@ export async function POST(req: Request) {
     const ok = process.env.NEXT_PUBLIC_OPENAI_API_KEY
     if (!ak && !ok) return jsonError("No AI provider key configured.", 500)
 
-    const promptPreamble =
-      "You are an automated quiz generation service. Your ONLY function is to return a valid, minified JSON object. Do not include any markdown, conversational text, or any characters outside of the JSON object. The JSON must match this TypeScript type: { questions: { question: string; options: string[4]; answer: string }[] }"
-
-    const promptStrict = `${promptPreamble}\nGenerate 10 multiple-choice questions strictly from the PDF content.`
-
-    const promptSimilar = `${promptPreamble}\nInvent 10 new multiple-choice questions on the same topic and difficulty as the PDF.`
-
+    const promptStrict = "Generate 10 multiple-choice questions strictly from the provided PDF content."
+    const promptSimilar =
+      "Invent 10 new multiple-choice questions on the same topic and difficulty as the provided PDF."
     const prompt = style === "strict" ? promptStrict : promptSimilar
 
     /* 3. Build model + messages ------------------------------------------ */
@@ -138,71 +88,32 @@ export async function POST(req: Request) {
       messages = [
         {
           role: "user",
-          content: `The PDF filename is "${file.name}". ${prompt} (You cannot read the PDF, so invent plausible questions.)`,
+          content: `The PDF filename is "${file.name}". ${prompt} (You cannot read the PDF, so invent plausible questions based on the filename.)`,
         },
       ]
     }
 
-    /* 4. Call the model using streamText ---------------------------------- */
-    const { textStream } = await streamText({ model, messages })
-    let fullText = ""
-    for await (const delta of textStream) {
-      fullText += delta
-    }
+    /* 4. Call generateObject --------------------------------------------- */
+    const { object: quiz } = await generateObject({
+      model,
+      schema: QUIZ_SCHEMA,
+      messages,
+    })
 
-    /* 5. Tolerant JSON parsing & validation ------------------------------- */
-    const raw = fullText.trim()
-    console.log("--- RAW AI RESPONSE ---")
-    console.log(raw)
-    console.log("-----------------------")
-
-    const parsed = extractJson(raw)
-
-    if (parsed === null) {
-      console.error("--- JSON EXTRACTION FAILED ---")
-      console.error("Could not find a valid JSON object in the AI response.")
-      console.error("------------------------------")
-      return Response.json({
-        fallback: true,
-        error: "AI did not return a valid JSON object.",
-        quiz: FALLBACK_QUIZ,
-      })
-    }
-
-    console.log("--- PARSED JSON ---")
-    console.log(JSON.stringify(parsed, null, 2))
-    console.log("-------------------")
-
-    const quiz = QUIZ_SCHEMA.safeParse(parsed)
-
-    if (!quiz.success) {
-      // First attempt to repair the data
-      const healed = sanitizeQuiz(parsed)
-      const healedCheck = QUIZ_SCHEMA.safeParse(healed)
-
-      if (healedCheck.success) {
-        console.warn("AI quiz needed healing – returned repaired version.")
-        return Response.json(healedCheck.data)
-      }
-
-      // Still bad – log details & fall back
-      const formatZod = (err: ZodError) => JSON.stringify(err.format(), null, 2)
-      console.error("--- ZOD VALIDATION ERROR ---")
-      console.error("Initial parse error:", formatZod(quiz.error))
-      if (healedCheck.error) {
-        console.error("Healed parse error:", formatZod(healedCheck.error))
-      }
-      console.error("----------------------------")
-
-      return Response.json({
-        fallback: true,
-        error: "Invalid JSON returned from model (even after repair).",
-        quiz: FALLBACK_QUIZ,
-      })
-    }
-
-    return Response.json(quiz.data)
+    return Response.json(quiz)
   } catch (err) {
+    if (NoObjectGeneratedError.isInstance(err)) {
+      console.error("--- NoObjectGeneratedError ---")
+      console.error("Cause:", err.cause)
+      console.error("Raw AI text:", err.text)
+      console.error("----------------------------")
+      return Response.json({
+        fallback: true,
+        error: "The AI failed to generate a valid quiz object.",
+        quiz: FALLBACK_QUIZ,
+      })
+    }
+
     console.error("generate-quiz fatal error:", err)
     return Response.json({
       fallback: true,
