@@ -6,19 +6,31 @@ const OPENAI_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY
 
 if (!OPENAI_KEY) throw new Error("NEXT_PUBLIC_OPENAI_API_KEY is missing. Add it in your Vercel project settings.")
 
-// create a provider instance that works in the browser runtime
+// Provider instance (Node runtime)
 const openai = createOpenAI({ apiKey: OPENAI_KEY })
+
+/** Maximum file size OpenAI will accept for a single request (≈8 MB). */
+const MAX_FILE_BYTES = 8_000_000
 
 export async function POST(req: Request) {
   try {
     const formData = await req.formData()
-    const file = formData.get("file") as File
+    const file = formData.get("file") as File | null
 
     if (!file)
       return new Response(JSON.stringify({ error: "No file uploaded" }), {
         status: 400,
         headers: { "Content-Type": "application/json" },
       })
+
+    if (file.size > MAX_FILE_BYTES) {
+      return new Response(
+        JSON.stringify({
+          error: "PDF is larger than 8 MB – please upload a smaller file or split it first.",
+        }),
+        { status: 413, headers: { "Content-Type": "application/json" } },
+      )
+    }
 
     const { object } = await generateObject({
       model: openai("gpt-4o-mini"),
@@ -52,21 +64,8 @@ export async function POST(req: Request) {
     })
   } catch (error) {
     console.error("Error identifying topic:", error)
-    let errorMessage = "Failed to identify topic. An unknown error occurred."
-    let statusCode = 500
-
-    if (error instanceof APIError) {
-      switch (error.status) {
-        case 401:
-          errorMessage =
-            "Authentication Error: Invalid OpenAI API key. Please check your API key in the project settings."
-          statusCode = 401
-          break
-        default:
-          errorMessage = `API Error: ${error.message}`
-          statusCode = error.status || 500
-      }
-    }
+    const errorMessage = error instanceof Error ? error.message : "Unknown server error"
+    const statusCode = error instanceof APIError ? error.status : 500
 
     return new Response(JSON.stringify({ error: errorMessage }), {
       status: statusCode,
