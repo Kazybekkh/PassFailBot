@@ -1,5 +1,6 @@
-import { createAnthropic } from "@ai-sdk/anthropic"
 import { generateObject, APIError } from "ai"
+import { createAnthropic } from "@ai-sdk/anthropic"
+import { openai } from "@ai-sdk/openai"
 import { z } from "zod"
 
 export const maxDuration = 60
@@ -17,12 +18,19 @@ export async function POST(req: Request) {
   try {
     // 1. Validate API Key
     const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY
-    if (!ANTHROPIC_KEY) {
-      console.error("[/api/generate-quiz] Anthropic API key not configured.")
-      return jsonError("Anthropic API key not configured.", 500)
+    let provider: ReturnType<typeof createAnthropic> | ReturnType<typeof openai>
+    let usingAnthropic = false
+
+    if (ANTHROPIC_KEY) {
+      provider = createAnthropic({ apiKey: ANTHROPIC_KEY })
+      usingAnthropic = true
+      console.log("[/api/generate-quiz] Using Anthropic provider")
+    } else if (process.env.NEXT_PUBLIC_OPENAI_API_KEY) {
+      provider = openai("gpt-4o") // falls back to OpenAI
+      console.log("[/api/generate-quiz] Anthropic key missing – falling back to OpenAI.")
+    } else {
+      return jsonError("No AI provider is configured.", 500)
     }
-    const anthropic = createAnthropic({ apiKey: ANTHROPIC_KEY })
-    console.log("[/api/generate-quiz] Anthropic client created.")
 
     // 2. Validate Request Body
     const formData = await req.formData()
@@ -46,7 +54,7 @@ export async function POST(req: Request) {
 
     // 4. Call AI
     const { object: quiz } = await generateObject({
-      model: anthropic("claude-3-5-sonnet-20240620"),
+      model: usingAnthropic ? provider("claude-3-5-sonnet-20240620") : provider,
       schema: z.object({
         questions: z
           .array(
@@ -60,20 +68,29 @@ export async function POST(req: Request) {
           .max(12)
           .describe("An array of 8 to 12 questions for the quiz."),
       }),
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: promptText },
+      messages: usingAnthropic
+        ? [
             {
-              type: "file",
-              data: fileBuffer,
-              mimeType: "application/pdf",
-              filename: file.name,
+              role: "user",
+              content: [
+                { type: "text", text: promptText },
+                {
+                  type: "file",
+                  data: fileBuffer,
+                  mimeType: "application/pdf",
+                  filename: file.name,
+                },
+              ],
+            },
+          ]
+        : [
+            {
+              role: "user",
+              content: `The PDF is titled "${file.name}". ${promptText}
+      You cannot see the PDF, so instead invent 10 insightful multiple-choice questions a diligent
+      university student might be asked after reading it. Provide 4 options and mark the answer.`,
             },
           ],
-        },
-      ],
     })
     console.log("[/api/generate-quiz] generateObject successful.")
 
@@ -81,7 +98,7 @@ export async function POST(req: Request) {
   } catch (err) {
     console.error("--- DETAILED ERROR in /api/generate-quiz ---")
     console.error("Error Type:", typeof err)
-    console.error("Error Object:", JSON.stringify(err, null, 2))
+    console.error("Error:", err?.message || err)
 
     if (err instanceof APIError) {
       console.error("Caught APIError. Status:", err.status, "Message:", err.message)
