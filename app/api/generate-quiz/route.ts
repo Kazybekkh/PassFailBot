@@ -68,14 +68,14 @@ export async function POST(req: Request) {
 
     return Response.json(quiz)
   } catch (err) {
-    console.error("generate-quiz:", err)
+    console.error("generate-quiz (Anthropic error):", err)
 
     let status = apiStatus(err)
     let message = apiMessage(err)
 
     if (message.includes("timed out")) {
       status = 504
-      message = "OpenAI request timed out – the PDF may be too large or complex. Try a smaller file."
+      message = "Anthropic request timed out – the PDF may be too large or complex. Try a smaller file."
     }
 
     return jsonError(message, status)

@@ -64,7 +64,7 @@ export async function POST(req: Request) {
     return json(object) // { topic: "…" }
   } catch (err) {
     /* 4. Soft-fallback so UI can proceed ---------------------------------- */
-    console.error("identify-topic (OpenAI error):", err)
+    console.error("identify-topic (Anthropic error):", err)
     return json({ topic: "Unknown" }) // 200 OK – UI continues gracefully
   }
 }
