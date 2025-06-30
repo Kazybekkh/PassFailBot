@@ -376,7 +376,20 @@ export default function PassFailBot() {
         method: "POST",
         body: formData,
       })
-      if (!res.ok) throw new Error("Failed to generate quiz.")
+
+      if (!res.ok) {
+        // Read JSON first, then fall back to raw text so we always get something meaningful
+        let errorMsg = `Server responded with ${res.status}`
+        try {
+          const data = await res.json()
+          if (data?.error) errorMsg = data.error
+        } catch {
+          const txt = await res.text().catch(() => "")
+          if (txt) errorMsg = txt
+        }
+        throw new Error(errorMsg)
+      }
+
       const generatedQuiz: Quiz = await res.json()
 
       setQuiz(generatedQuiz)
@@ -384,8 +397,10 @@ export default function PassFailBot() {
       setTimeLeft(duration * 60)
       setGameState("quiz")
     } catch (err: any) {
-      setError(err.message ?? "Unexpected error.")
-      setCoins((prev) => prev + betAmount) // refund
+      const message = err?.message ?? "Unexpected error."
+      setError(message)
+      setBotMessage(`🚨 ${message}`)
+      setCoins((prev) => prev + betAmount) // refund the bet
       setGameState("config")
       setEyeState("idle")
     }
