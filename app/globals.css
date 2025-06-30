@@ -87,22 +87,33 @@
 
 @layer components {
   .eye-container {
-    @apply w-48 h-48 flex justify-center items-center gap-4;
+    @apply relative w-48 h-48 flex justify-center items-center gap-4;
   }
   .eye {
-    @apply w-12 h-12 rounded-lg;
-    background-image: radial-gradient(circle at center, #ffffff 20%, #89f7fe 70%, #66a6ff 100%);
-    box-shadow: 0 0 10px 3px rgba(79, 172, 254, 0.6);
+    @apply w-8 h-8; /* Square eyes */
+    background-color: #89f7fe; /* Bright cyan */
+    box-shadow: 0 0 0 4px #2d2d2d; /* 4px black border */
     transition: all 0.3s ease-in-out;
+    image-rendering: pixelated;
   }
   .eye-win {
-    @apply h-14; /* Taller for "happy" expression */
-    background-image: radial-gradient(circle at center, #ffffff 20%, #a5d6a7 70%, #4caf50 100%);
-    box-shadow: 0 0 10px 3px rgba(76, 175, 80, 0.6);
+    @apply h-6; /* Squinty happy eyes */
+    background-color: #a5d6a7; /* Light green */
+    box-shadow: 0 0 0 4px #2d2d2d;
   }
   .eye-lose {
-    @apply h-10; /* Shorter for "sad" expression */
-    background-image: radial-gradient(circle at center, #ffffff 20%, #ef9a9a 70%, #ff5252 100%);
-    box-shadow: 0 0 10px 3px rgba(255, 82, 82, 0.6);
+    @apply h-10 w-6; /* Sad, tall eyes */
+    background-color: #ef9a9a; /* Light red */
+    box-shadow: 0 0 0 4px #2d2d2d;
+  }
+  .mouth {
+    @apply absolute w-16 h-6 bg-primary opacity-0 transition-opacity duration-300;
+    bottom: 28%;
+    /* Create a smile shape using a mask */
+    -webkit-mask-image: radial-gradient(circle at 50% 0, transparent 20px, black 21px);
+    mask-image: radial-gradient(circle at 50% 0, transparent 20px, black 21px);
+  }
+  .mouth-win {
+    @apply opacity-100;
   }
 }

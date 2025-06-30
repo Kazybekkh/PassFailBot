@@ -28,6 +28,7 @@ export function EveEyes({ state }: EveEyesProps) {
           state === "lose" && "eye-lose",
         )}
       />
+      <div className={cn("mouth", state === "win" && "mouth-win")} />
     </div>
   )
 }
