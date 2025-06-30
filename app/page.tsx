@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
+import { useTypewriter } from "@/hooks/use-typewriter" // Import the hook
 
 type GameState = "config" | "loading" | "quiz" | "result" | "cheated"
 type ConfigStep = "upload" | "target" | "bet" | "duration" | "confirm"
@@ -30,18 +31,18 @@ const RobotHead = ({ state }: { state: EyeState }) => (
   <div className={cn("relative flex h-48 w-48 items-center justify-center gap-4", state === "idle" && "animate-float")}>
     <div
       className={cn(
-        "h-8 w-8 bg-[hsl(var(--foreground))] transition-all",
+        "h-8 w-8 rounded-sm bg-blue-500 border-2 border-gray-800 transition-all", // UPDATED: Blue eyes with dark grey border
         state === "focused" && "animate-squint",
-        state === "win" && "h-6 bg-[hsl(var(--pass))]",
-        state === "lose" && "h-10 w-6 bg-[hsl(var(--fail))]",
+        state === "win" && "bg-[hsl(var(--pass))] border-green-700 h-6", // Win state overrides base colors
+        state === "lose" && "bg-[hsl(var(--fail))] border-red-700 h-10 w-6", // Lose state overrides base colors
       )}
     />
     <div
       className={cn(
-        "h-8 w-8 bg-[hsl(var(--foreground))] transition-all",
+        "h-8 w-8 rounded-sm bg-blue-500 border-2 border-gray-800 transition-all", // UPDATED: Blue eyes with dark grey border
         state === "focused" && "animate-squint",
-        state === "win" && "h-6 bg-[hsl(var(--pass))]",
-        state === "lose" && "h-10 w-6 bg-[hsl(var(--fail))]",
+        state === "win" && "bg-[hsl(var(--pass))] border-green-700 h-6", // Win state overrides base colors
+        state === "lose" && "bg-[hsl(var(--fail))] border-red-700 h-10 w-6", // Lose state overrides base colors
       )}
     />
     <div
@@ -58,17 +59,21 @@ const RobotHead = ({ state }: { state: EyeState }) => (
 )
 
 // Standalone Dialogue Box Component (Internal to this file)
-const Dialogue = ({ text }: { text: string }) => (
-  <div className="relative mb-6 w-full">
-    <div className="flex min-h-32 w-full items-center justify-center rounded-lg border-2 border-border bg-card p-4 text-center text-lg font-normal leading-relaxed text-card-foreground">
-      <p className="h-full">{text}</p>
+const Dialogue = ({ text }: { text: string }) => {
+  // UPDATED: Use the typewriter hook for animation
+  const animatedText = useTypewriter(text)
+  return (
+    <div className="relative mb-6 w-full">
+      <div className="flex min-h-32 w-full items-center justify-center rounded-lg border-2 border-border bg-card p-4 text-center text-lg font-normal leading-relaxed text-card-foreground">
+        <p className="h-full">{animatedText}</p>
+      </div>
+      <div
+        className="absolute h-0 w-0 border-8 border-t-border border-transparent"
+        style={{ bottom: "-16px", left: "50%", transform: "translateX(-50%)" }}
+      />
     </div>
-    <div
-      className="absolute h-0 w-0 border-8 border-t-border border-transparent"
-      style={{ bottom: "-16px", left: "50%", transform: "translateX(-50%)" }}
-    />
-  </div>
-)
+  )
+}
 
 export default function PassFailBot() {
   /* ──────────────────────── state ──────────────────────── */
