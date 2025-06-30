@@ -38,7 +38,8 @@ export async function POST(req: Request) {
               answer: z.string(),
             }),
           )
-          .length(10),
+          .min(5)
+          .max(15),
       }),
       messages: [
         {
