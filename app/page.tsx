@@ -90,14 +90,24 @@ const Dialogue = ({ text }: { text: string }) => {
       </div>
       <div
         className="absolute h-0 w-0 border-8 border-t-border border-transparent"
-        style={{ bottom: "-16px", left: "50%", transform: "translateX(-50%)" }}
+        style={{
+          bottom: "-16px",
+          left: "50%",
+          transform: "translateX(-50%)",
+        }}
       />
     </div>
   )
 }
 
 // Stats Panel Component
-const StatsPanel = ({ coins, lastBet }: { coins: number; lastBet: LastBet | null }) => (
+const StatsPanel = ({
+  coins,
+  lastBet,
+}: {
+  coins: number
+  lastBet: LastBet | null
+}) => (
   <Card>
     <CardHeader>
       <CardTitle>Your Stats</CardTitle>
@@ -236,15 +246,16 @@ export default function PassFailBot() {
       })
 
       if (!res.ok) {
-        throw new Error("Could not identify the topic.")
+        const errorData = await res.json().catch(() => ({ error: "Failed to parse error from server." }))
+        throw new Error(errorData.error || `Server responded with status: ${res.status}`)
       }
 
       const { topic } = await res.json()
-      // UPDATED: Combined the topic and file loaded messages into one clear sentence.
       setBotMessage(`Okay, I've analyzed your PDF on '${topic}'. The file "${file.name}" is locked and loaded.`)
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
-      setBotMessage(`Got it! Your file "${file.name}" is locked and loaded.`) // Fallback message
+      setBotMessage(`I couldn't figure out the topic, but your file "${file.name}" is locked and loaded.`) // Fallback message
+      setError(err.message)
     } finally {
       setIsIdentifyingTopic(false)
       setEyeState("idle")
@@ -367,7 +378,12 @@ export default function PassFailBot() {
         method: "POST",
         body: formData,
       })
-      if (!res.ok) throw new Error("Failed to generate quiz.")
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: "Failed to parse error response." }))
+        throw new Error(errorData.error || `Server responded with status: ${res.status}`)
+      }
+
       const generatedQuiz: Quiz = await res.json()
 
       setQuiz(generatedQuiz)
@@ -375,10 +391,11 @@ export default function PassFailBot() {
       setTimeLeft(duration * 60)
       setGameState("quiz")
     } catch (err: any) {
-      setError(err.message ?? "Unexpected error.")
+      setError(err.message ?? "An unexpected error occurred.")
+      setBotMessage("Oh no, something went wrong. Check the error message below.")
       setCoins((prev) => prev + betAmount) // refund
       setGameState("config")
-      setEyeState("idle")
+      setEyeState("lose")
     }
   }
 
@@ -767,9 +784,9 @@ export default function PassFailBot() {
 
   return (
     <main className="flex flex-col lg:flex-row gap-8 min-h-screen items-center p-4 sm:p-8 bg-gray-50">
-      <div className="w-full lg:flex-1 flex items-center justify-center">{renderContent()}</div>
-      <div className="hidden lg:flex w-full lg:max-w-sm justify-center">
-        <div className="w-full">
+      <div className="w-full lg:w-2/3 flex items-center justify-center">{renderContent()}</div>
+      <div className="hidden lg:flex w-full lg:w-1/3 justify-center">
+        <div className="w-full max-w-sm">
           <StatsPanel coins={coins} lastBet={lastBet} />
         </div>
       </div>

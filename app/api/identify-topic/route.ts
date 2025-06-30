@@ -1,34 +1,40 @@
-import { openai } from "@ai-sdk/openai"
-import { generateObject } from "ai"
+import { createOpenAI } from "@ai-sdk/openai"
+import { generateObject, APIError } from "ai"
 import { z } from "zod"
 
-export const maxDuration = 30 // Shorter timeout for topic identification
+const OPENAI_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY
+
+if (!OPENAI_KEY) throw new Error("NEXT_PUBLIC_OPENAI_API_KEY is missing. Add it in your Vercel project settings.")
+
+// create a provider instance that works in the browser runtime
+const openai = createOpenAI({ apiKey: OPENAI_KEY })
 
 export async function POST(req: Request) {
   try {
     const formData = await req.formData()
     const file = formData.get("file") as File
 
-    if (!file) {
+    if (!file)
       return new Response(JSON.stringify({ error: "No file uploaded" }), {
         status: 400,
         headers: { "Content-Type": "application/json" },
       })
-    }
 
-    const { object: topicResponse } = await generateObject({
-      model: openai("gpt-4o"),
+    const { object } = await generateObject({
+      model: openai("gpt-4o-mini"),
       schema: z.object({
-        topic: z.string().describe("The main topic or subject of the document, summarized in 2-5 words."),
+        topic: z
+          .string()
+          .describe(
+            "The main topic or subject of the document. E.g., 'Quantum Physics', 'Organic Chemistry', 'World War II History'.",
+          ),
       }),
+      prompt:
+        "Analyze this document and identify its main topic or subject. Provide a concise, one-to-three-word answer.",
       messages: [
         {
           role: "user",
           content: [
-            {
-              type: "text",
-              text: "Briefly identify the main topic or subject of this document in 2-5 words. For example: 'Linear Algebra', 'World War II History', 'Quantum Mechanics'.",
-            },
             {
               type: "file",
               data: await file.arrayBuffer(),
@@ -40,14 +46,30 @@ export async function POST(req: Request) {
       ],
     })
 
-    return new Response(JSON.stringify(topicResponse), {
+    return new Response(JSON.stringify(object), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     })
   } catch (error) {
-    console.error(error)
-    return new Response(JSON.stringify({ error: "Failed to identify topic." }), {
-      status: 500,
+    console.error("Error identifying topic:", error)
+    let errorMessage = "Failed to identify topic. An unknown error occurred."
+    let statusCode = 500
+
+    if (error instanceof APIError) {
+      switch (error.status) {
+        case 401:
+          errorMessage =
+            "Authentication Error: Invalid OpenAI API key. Please check your API key in the project settings."
+          statusCode = 401
+          break
+        default:
+          errorMessage = `API Error: ${error.message}`
+          statusCode = error.status || 500
+      }
+    }
+
+    return new Response(JSON.stringify({ error: errorMessage }), {
+      status: statusCode,
       headers: { "Content-Type": "application/json" },
     })
   }

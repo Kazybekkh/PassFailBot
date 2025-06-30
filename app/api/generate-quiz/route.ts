@@ -15,7 +15,7 @@ export async function POST(req: Request) {
   try {
     const formData = await req.formData()
     const file = formData.get("file") as File
-    const quizStyle = formData.get("style") as "strict" | "similar" // UPDATED: Get style from form data
+    const quizStyle = formData.get("style") as "strict" | "similar"
 
     if (!file)
       return new Response(JSON.stringify({ error: "No file uploaded" }), {
@@ -23,7 +23,6 @@ export async function POST(req: Request) {
         headers: { "Content-Type": "application/json" },
       })
 
-    // UPDATED: Define different prompts based on the selected style
     const strictPrompt =
       "Based on this PDF, generate a challenging 10-question multiple-choice quiz. For each question give 4 options and specify the correct answer."
     const similarPrompt =
@@ -49,7 +48,7 @@ export async function POST(req: Request) {
           content: [
             {
               type: "text",
-              text: promptText, // UPDATED: Use the selected prompt
+              text: promptText,
             },
             {
               type: "file",
@@ -67,13 +66,43 @@ export async function POST(req: Request) {
       headers: { "Content-Type": "application/json" },
     })
   } catch (error) {
-    console.error(error)
-    let errorMessage = "Failed to generate quiz."
-    if (error instanceof APIError && error.status === 401) {
-      errorMessage = "Invalid or missing OpenAI key. Check NEXT_PUBLIC_OPENAI_API_KEY in your env vars."
+    console.error("Error generating quiz:", error)
+
+    let errorMessage = "Failed to generate quiz. An unknown error occurred."
+    let statusCode = 500
+
+    if (error instanceof APIError) {
+      switch (error.status) {
+        case 401:
+          errorMessage =
+            "Authentication Error: Invalid OpenAI API key or insufficient credits. Please check your API key and account balance."
+          statusCode = 401
+          break
+        case 429:
+          errorMessage =
+            "Rate Limit Exceeded: You have hit your request limit. Please check your OpenAI plan and billing details."
+          statusCode = 429
+          break
+        case 500:
+          errorMessage = "OpenAI Server Error: The AI provider is experiencing issues. Please try again later."
+          statusCode = 502 // Bad Gateway
+          break
+        default:
+          errorMessage = `API Error: ${error.message}`
+          statusCode = error.status || 500
+      }
+    } else if (error instanceof Error) {
+      if (error.message.includes("timed out")) {
+        errorMessage =
+          "Request Timed Out: The PDF is likely too large or complex to process in 60 seconds. Please try a smaller file."
+        statusCode = 504 // Gateway Timeout
+      } else {
+        errorMessage = error.message
+      }
     }
+
     return new Response(JSON.stringify({ error: errorMessage }), {
-      status: 500,
+      status: statusCode,
       headers: { "Content-Type": "application/json" },
     })
   }
