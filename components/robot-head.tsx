@@ -8,7 +8,12 @@ type RobotHeadProps = {
 
 export function RobotHead({ state }: RobotHeadProps) {
   return (
-    <div className={cn("relative w-48 h-48", state === "idle" && "animate-float")}>
+    <div
+      className={cn(
+        "relative w-48 h-48 [filter:drop-shadow(0_0_10px_rgba(79,172,254,0.7))]",
+        state === "idle" && "animate-float",
+      )}
+    >
       <div className="absolute inset-0">
         <RobotHeadSVG />
       </div>
