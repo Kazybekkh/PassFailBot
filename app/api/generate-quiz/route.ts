@@ -3,15 +3,11 @@ import { generateObject, APIError } from "ai"
 import { z } from "zod"
 
 const OPENAI_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY
+if (!OPENAI_KEY) throw new Error("NEXT_PUBLIC_OPENAI_API_KEY is missing. Add it in your project settings.")
 
-if (!OPENAI_KEY) throw new Error("NEXT_PUBLIC_OPENAI_API_KEY is missing. Add it in your Vercel project settings.")
-
-// create a provider instance that works in the browser runtime
 const openai = createOpenAI({ apiKey: OPENAI_KEY })
 
-export const maxDuration = 60 // Extend timeout for AI generation
-
-/** Maximum file size OpenAI will accept for a single request (≈8 MB). */
+export const maxDuration = 60
 const MAX_FILE_BYTES = 8_000_000
 
 export async function POST(req: Request) {
@@ -26,19 +22,16 @@ export async function POST(req: Request) {
         headers: { "Content-Type": "application/json" },
       })
 
-    if (file.size > MAX_FILE_BYTES) {
-      return new Response(
-        JSON.stringify({
-          error: "PDF is larger than 8 MB – please upload a smaller file or split it first.",
-        }),
-        { status: 413, headers: { "Content-Type": "application/json" } },
-      )
-    }
+    if (file.size > MAX_FILE_BYTES)
+      return new Response(JSON.stringify({ error: "PDF larger than 8 MB – please upload a smaller file." }), {
+        status: 413,
+        headers: { "Content-Type": "application/json" },
+      })
 
     const strictPrompt =
       "Based on this PDF, generate a challenging 10-question multiple-choice quiz. For each question give 4 options and specify the correct answer."
     const similarPrompt =
-      "Analyze the style, format, and difficulty of the content in this PDF. First, determine if the document contains mathematical problems or equations. Then, generate a new, challenging 10-question multiple-choice quiz that is *similar in style* to the content provided, but with different questions and values. The questions should not be directly from the PDF, but should test the same concepts at a similar level. **Crucially, if the original document contained math, ensure the new math questions you generate are written in plain text and do NOT use LaTeX formatting (e.g., avoid `$`, `\\(`, `\\[`, `\\frac`, `\\sum`, etc.).** For each question give 4 options and specify the correct answer."
+      "Analyze the style and difficulty of this PDF. Create a new 10-question multiple-choice quiz that is similar in style (not copied). If the source contained math, write plain-text math (no LaTeX). Provide 4 options per question and specify the correct answer."
     const promptText = quizStyle === "similar" ? similarPrompt : strictPrompt
 
     const { object: quiz } = await generateObject({
@@ -47,53 +40,37 @@ export async function POST(req: Request) {
         questions: z
           .array(
             z.object({
-              question: z.string().describe("The question."),
-              options: z.array(z.string()).describe("An array of 4 possible answers."),
-              answer: z.string().describe("The correct answer from the options."),
+              question: z.string(),
+              options: z.array(z.string()).length(4),
+              answer: z.string(),
             }),
           )
-          .describe("An array of 10 multiple-choice questions."),
+          .length(10),
       }),
       messages: [
         {
           role: "user",
           content: [
-            {
-              type: "text",
-              text: promptText,
-            },
-            {
-              type: "file",
-              data: await file.arrayBuffer(),
-              mimeType: "application/pdf",
-              filename: file.name,
-            },
+            { type: "text", text: promptText },
+            { type: "file", data: await file.arrayBuffer(), mimeType: "application/pdf", filename: file.name },
           ],
         },
       ],
     })
 
-    return new Response(JSON.stringify(quiz), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    })
-  } catch (error) {
-    console.error("Error generating quiz:", error)
-    let errorMessage = error instanceof Error ? error.message : "Unknown server error"
-    let statusCode = error instanceof APIError ? error.status : 500
+    return Response.json(quiz)
+  } catch (err) {
+    console.error("generate-quiz:", err)
+    let status = err instanceof APIError ? err.status : 500
+    let message = err instanceof APIError ? err.message : err instanceof Error ? err.message : "Unknown server error."
 
-    if (error instanceof Error) {
-      if (error.message.includes("timed out")) {
-        errorMessage =
-          "Request Timed Out: The PDF is likely too large or complex to process in 60 seconds. Please try a smaller file."
-        statusCode = 504 // Gateway Timeout
-      } else {
-        errorMessage = error.message
-      }
+    if (message.includes("timed out")) {
+      status = 504
+      message = "OpenAI request timed out – the PDF may be too large or complex. Try a simpler or smaller file."
     }
 
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      status: statusCode,
+    return new Response(JSON.stringify({ error: message }), {
+      status,
       headers: { "Content-Type": "application/json" },
     })
   }

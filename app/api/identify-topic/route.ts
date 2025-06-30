@@ -3,13 +3,11 @@ import { generateObject, APIError } from "ai"
 import { z } from "zod"
 
 const OPENAI_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY
+if (!OPENAI_KEY) throw new Error("NEXT_PUBLIC_OPENAI_API_KEY is missing. Add it in your project settings.")
 
-if (!OPENAI_KEY) throw new Error("NEXT_PUBLIC_OPENAI_API_KEY is missing. Add it in your Vercel project settings.")
-
-// Provider instance (Node runtime)
 const openai = createOpenAI({ apiKey: OPENAI_KEY })
 
-/** Maximum file size OpenAI will accept for a single request (≈8 MB). */
+/** ≈8 MB – the hard limit for a single PDF in the OpenAI chat/file message API. */
 const MAX_FILE_BYTES = 8_000_000
 
 export async function POST(req: Request) {
@@ -23,52 +21,34 @@ export async function POST(req: Request) {
         headers: { "Content-Type": "application/json" },
       })
 
-    if (file.size > MAX_FILE_BYTES) {
-      return new Response(
-        JSON.stringify({
-          error: "PDF is larger than 8 MB – please upload a smaller file or split it first.",
-        }),
-        { status: 413, headers: { "Content-Type": "application/json" } },
-      )
-    }
+    if (file.size > MAX_FILE_BYTES)
+      return new Response(JSON.stringify({ error: "PDF larger than 8 MB – please upload a smaller file." }), {
+        status: 413,
+        headers: { "Content-Type": "application/json" },
+      })
 
     const { object } = await generateObject({
       model: openai("gpt-4o-mini"),
       schema: z.object({
-        topic: z
-          .string()
-          .describe(
-            "The main topic or subject of the document. E.g., 'Quantum Physics', 'Organic Chemistry', 'World War II History'.",
-          ),
+        topic: z.string().describe("Main topic of the document in 2-5 words"),
       }),
       prompt:
-        "Analyze this document and identify its main topic or subject. Provide a concise, one-to-three-word answer.",
+        "Identify the main topic or subject of this document in 2-5 words (e.g. 'Linear Algebra', 'World War II').",
       messages: [
         {
           role: "user",
-          content: [
-            {
-              type: "file",
-              data: await file.arrayBuffer(),
-              mimeType: "application/pdf",
-              filename: file.name,
-            },
-          ],
+          content: [{ type: "file", data: await file.arrayBuffer(), mimeType: "application/pdf", filename: file.name }],
         },
       ],
     })
 
-    return new Response(JSON.stringify(object), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    })
-  } catch (error) {
-    console.error("Error identifying topic:", error)
-    const errorMessage = error instanceof Error ? error.message : "Unknown server error"
-    const statusCode = error instanceof APIError ? error.status : 500
-
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      status: statusCode,
+    return Response.json(object)
+  } catch (err) {
+    console.error("identify-topic:", err)
+    const status = err instanceof APIError ? err.status : 500
+    const msg = err instanceof APIError ? err.message : err instanceof Error ? err.message : "Unknown server error."
+    return new Response(JSON.stringify({ error: msg }), {
+      status,
       headers: { "Content-Type": "application/json" },
     })
   }

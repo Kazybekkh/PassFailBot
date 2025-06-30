@@ -90,24 +90,14 @@ const Dialogue = ({ text }: { text: string }) => {
       </div>
       <div
         className="absolute h-0 w-0 border-8 border-t-border border-transparent"
-        style={{
-          bottom: "-16px",
-          left: "50%",
-          transform: "translateX(-50%)",
-        }}
+        style={{ bottom: "-16px", left: "50%", transform: "translateX(-50%)" }}
       />
     </div>
   )
 }
 
 // Stats Panel Component
-const StatsPanel = ({
-  coins,
-  lastBet,
-}: {
-  coins: number
-  lastBet: LastBet | null
-}) => (
+const StatsPanel = ({ coins, lastBet }: { coins: number; lastBet: LastBet | null }) => (
   <Card>
     <CardHeader>
       <CardTitle>Your Stats</CardTitle>
@@ -246,8 +236,8 @@ export default function PassFailBot() {
       })
 
       if (!res.ok) {
-        // Attempt to read JSON first, then fall back to raw text
-        let errorMsg = `Server responded with status ${res.status}`
+        // surface detailed error from server
+        let errorMsg = `Server responded with ${res.status}`
         try {
           const data = await res.json()
           if (data?.error) errorMsg = data.error
@@ -259,11 +249,11 @@ export default function PassFailBot() {
       }
 
       const { topic } = await res.json()
+      // UPDATED: Combined the topic and file loaded messages into one clear sentence.
       setBotMessage(`Okay, I've analyzed your PDF on '${topic}'. The file "${file.name}" is locked and loaded.`)
-    } catch (err: any) {
+    } catch (err) {
       console.error(err)
-      setBotMessage(`I couldn't figure out the topic, but your file "${file.name}" is locked and loaded.`) // Fallback message
-      setError(err.message)
+      setBotMessage(`Got it! Your file "${file.name}" is locked and loaded.`) // Fallback message
     } finally {
       setIsIdentifyingTopic(false)
       setEyeState("idle")
@@ -386,19 +376,7 @@ export default function PassFailBot() {
         method: "POST",
         body: formData,
       })
-
-      if (!res.ok) {
-        let errorMsg = `Server responded with status ${res.status}`
-        try {
-          const data = await res.json()
-          if (data?.error) errorMsg = data.error
-        } catch {
-          const txt = await res.text().catch(() => "")
-          if (txt) errorMsg = txt
-        }
-        throw new Error(errorMsg)
-      }
-
+      if (!res.ok) throw new Error("Failed to generate quiz.")
       const generatedQuiz: Quiz = await res.json()
 
       setQuiz(generatedQuiz)
@@ -406,11 +384,10 @@ export default function PassFailBot() {
       setTimeLeft(duration * 60)
       setGameState("quiz")
     } catch (err: any) {
-      setError(err.message ?? "An unexpected error occurred.")
-      setBotMessage("Oh no, something went wrong. Check the error message below.")
+      setError(err.message ?? "Unexpected error.")
       setCoins((prev) => prev + betAmount) // refund
       setGameState("config")
-      setEyeState("lose")
+      setEyeState("idle")
     }
   }
 
@@ -799,9 +776,9 @@ export default function PassFailBot() {
 
   return (
     <main className="flex flex-col lg:flex-row gap-8 min-h-screen items-center p-4 sm:p-8 bg-gray-50">
-      <div className="w-full lg:w-2/3 flex items-center justify-center">{renderContent()}</div>
-      <div className="hidden lg:flex w-full lg:w-1/3 justify-center">
-        <div className="w-full max-w-sm">
+      <div className="w-full lg:flex-1 flex items-center justify-center">{renderContent()}</div>
+      <div className="hidden lg:flex w-full lg:max-w-sm justify-center">
+        <div className="w-full">
           <StatsPanel coins={coins} lastBet={lastBet} />
         </div>
       </div>
