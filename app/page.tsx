@@ -149,7 +149,7 @@ export default function PassFailBot() {
   const [configStep, setConfigStep] = useState<ConfigStep>("upload")
   const [eyeState, setEyeState] = useState<EyeState>("idle")
   const [botMessage, setBotMessage] = useState(initialBotMessage)
-  const [isIdentifyingTopic, setIsIdentifyingTopic] = useState(false) // UPDATED: State for topic identification
+  const [isIdentifyingTopic, setIsIdentifyingTopic] = useState(false)
 
   const [pdfFile, setPdfFile] = useState<File | null>(null)
   const [quizStyle, setQuizStyle] = useState<QuizStyle | null>(null)
@@ -240,7 +240,8 @@ export default function PassFailBot() {
       }
 
       const { topic } = await res.json()
-      setBotMessage(`Got it! Looks like we're studying '${topic}'. Your file "${file.name}" is locked and loaded.`)
+      // UPDATED: Combined the topic and file loaded messages into one clear sentence.
+      setBotMessage(`Okay, I've analyzed your PDF on '${topic}'. The file "${file.name}" is locked and loaded.`)
     } catch (err) {
       console.error(err)
       setBotMessage(`Got it! Your file "${file.name}" is locked and loaded.`) // Fallback message
