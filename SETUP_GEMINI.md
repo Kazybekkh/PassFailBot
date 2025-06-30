@@ -20,6 +20,13 @@
 npm run dev
 ```
 
+### 4. For Vercel Deployment
+Add the environment variable in your Vercel dashboard:
+1. Go to your project settings in Vercel
+2. Navigate to "Environment Variables"
+3. Add: `GOOGLE_GENERATIVE_AI_API_KEY` with your API key value
+4. Deploy!
+
 ## What Changed:
 
 ### Dependencies
