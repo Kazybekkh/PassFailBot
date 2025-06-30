@@ -582,17 +582,17 @@ export default function PassFailBot() {
             <CardContent className="p-6">
               <div className="border-b-2 pb-4 mb-4 text-sm flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  <Coins size={20} className="text-yellow-500" />
+                  <Coins size={24} className="text-yellow-500" />
                   <span>{coins}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Clock size={20} className="text-green-600" />
+                  <Clock size={24} className="text-green-600" />
                   <span>
                     {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, "0")}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Target size={20} className="text-destructive" />
+                  <Target size={24} className="text-destructive" />
                   <span>Target: {targetScore}%</span>
                 </div>
               </div>
