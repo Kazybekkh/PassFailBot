@@ -16,20 +16,22 @@ function jsonError(message: string, status = 500) {
 export async function POST(req: Request) {
   console.log("[/api/generate-quiz] Received request.")
   try {
-    // 1. Validate API Key
-    const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY
-    let provider: ReturnType<typeof createAnthropic> | ReturnType<typeof openai>
-    let usingAnthropic = false
+    // 1. Pick a provider
+    let modelFn: Parameters<typeof generateObject>[0]["model"]
 
+    const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY
     if (ANTHROPIC_KEY) {
-      provider = createAnthropic({ apiKey: ANTHROPIC_KEY })
-      usingAnthropic = true
-      console.log("[/api/generate-quiz] Using Anthropic provider")
-    } else if (process.env.NEXT_PUBLIC_OPENAI_API_KEY) {
-      provider = openai("gpt-4o") // falls back to OpenAI
-      console.log("[/api/generate-quiz] Anthropic key missing – falling back to OpenAI.")
+      const anthropic = createAnthropic({ apiKey: ANTHROPIC_KEY })
+      modelFn = anthropic("claude-3-5-sonnet-20240620")
+      console.log("[/api/generate-quiz] Using Anthropic.")
     } else {
-      return jsonError("No AI provider is configured.", 500)
+      const OPENAI_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY
+      if (!OPENAI_KEY) {
+        return jsonError("No AI provider is configured.", 500)
+      }
+      // Pass the key explicitly – the SDK otherwise looks for OPENAI_API_KEY
+      modelFn = openai("gpt-4o", { apiKey: OPENAI_KEY })
+      console.log("[/api/generate-quiz] Using OpenAI fallback.")
     }
 
     // 2. Validate Request Body
@@ -54,7 +56,7 @@ export async function POST(req: Request) {
 
     // 4. Call AI
     const { object: quiz } = await generateObject({
-      model: usingAnthropic ? provider("claude-3-5-sonnet-20240620") : provider,
+      model: modelFn,
       schema: z.object({
         questions: z
           .array(
@@ -68,7 +70,7 @@ export async function POST(req: Request) {
           .max(12)
           .describe("An array of 8 to 12 questions for the quiz."),
       }),
-      messages: usingAnthropic
+      messages: ANTHROPIC_KEY
         ? [
             {
               role: "user",
@@ -87,8 +89,8 @@ export async function POST(req: Request) {
             {
               role: "user",
               content: `The PDF is titled "${file.name}". ${promptText}
-      You cannot see the PDF, so instead invent 10 insightful multiple-choice questions a diligent
-      university student might be asked after reading it. Provide 4 options and mark the answer.`,
+You cannot see the PDF, so instead invent 10 insightful multiple-choice questions a diligent
+university student might be asked after reading it. Provide 4 options and mark the answer.`,
             },
           ],
     })
