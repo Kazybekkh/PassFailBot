@@ -104,15 +104,12 @@ export async function POST(req: Request) {
     const ok = process.env.NEXT_PUBLIC_OPENAI_API_KEY
     if (!ak && !ok) return jsonError("No AI provider key configured.", 500)
 
-    const promptStrict =
-      "Return ONLY valid minified JSON, no markdown, matching this TypeScript type:\n" +
-      "{ questions: { question: string; options: string[4]; answer: string }[] }\n" +
-      "Generate 10 multiple-choice questions strictly from the PDF content."
+    const promptPreamble =
+      "You are an automated quiz generation service. Your ONLY function is to return a valid, minified JSON object. Do not include any markdown, conversational text, or any characters outside of the JSON object. The JSON must match this TypeScript type: { questions: { question: string; options: string[4]; answer: string }[] }"
 
-    const promptSimilar =
-      "Return ONLY valid minified JSON, no markdown, matching this TypeScript type:\n" +
-      "{ questions: { question: string; options: string[4]; answer: string }[] }\n" +
-      "Invent 10 new multiple-choice questions on the same topic and difficulty as the PDF."
+    const promptStrict = `${promptPreamble}\nGenerate 10 multiple-choice questions strictly from the PDF content.`
+
+    const promptSimilar = `${promptPreamble}\nInvent 10 new multiple-choice questions on the same topic and difficulty as the PDF.`
 
     const prompt = style === "strict" ? promptStrict : promptSimilar
 
@@ -160,6 +157,18 @@ export async function POST(req: Request) {
     console.log("-----------------------")
 
     const parsed = extractJson(raw)
+
+    if (parsed === null) {
+      console.error("--- JSON EXTRACTION FAILED ---")
+      console.error("Could not find a valid JSON object in the AI response.")
+      console.error("------------------------------")
+      return Response.json({
+        fallback: true,
+        error: "AI did not return a valid JSON object.",
+        quiz: FALLBACK_QUIZ,
+      })
+    }
+
     console.log("--- PARSED JSON ---")
     console.log(JSON.stringify(parsed, null, 2))
     console.log("-------------------")
@@ -179,7 +188,10 @@ export async function POST(req: Request) {
       // Still bad – log details & fall back
       const formatZod = (err: ZodError) => JSON.stringify(err.format(), null, 2)
       console.error("--- ZOD VALIDATION ERROR ---")
-      console.error(formatZod(quiz.error))
+      console.error("Initial parse error:", formatZod(quiz.error))
+      if (healedCheck.error) {
+        console.error("Healed parse error:", formatZod(healedCheck.error))
+      }
       console.error("----------------------------")
 
       return Response.json({
