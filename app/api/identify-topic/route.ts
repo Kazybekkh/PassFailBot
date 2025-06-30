@@ -24,52 +24,66 @@ function cleanTopic(raw: string): string {
     .join(" ")
 }
 
+function topicFromFilename(name: string) {
+  return cleanTopic(
+    name
+      .replace(/\.[^/.]+$/, "") // drop extension
+      .replace(/[_-]+/g, " ") // snake/kebab → spaces
+      .replace(/\d+/g, " "), // drop numbers
+  )
+}
+
 /* -------------------------------------------------------------------------- */
 /*  ROUTE                                                                     */
 /* -------------------------------------------------------------------------- */
 
 export async function POST(req: Request) {
   try {
-    /* 1. Parse upload ------------------------------------------------------ */
+    /* 1. Parse upload -------------------------------------------------- */
     const formData = await req.formData()
     const file = formData.get("file") as File | null
     if (!file) return json({ error: "No file uploaded." }, 400)
     if (file.size > MAX_FILE_BYTES) return json({ error: "PDF larger than 8 MB." }, 413)
 
-    /* 2. Check for Google API Key ---------------------------------------- */
-    if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
-      return json({ error: "Google API key not configured." }, 500)
-    }
+    /* 2. Attempt Gemini call ----------------------------------------- */
+    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY
+    if (apiKey) {
+      try {
+        const google = createGoogle({ apiKey })
+        const model = google("models/gemini-1.5-flash-latest")
 
-    /* 3. Call Gemini to identify topic from PDF content ------------------ */
-    const google = createGoogle({ apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY })
-    const model = google("models/gemini-1.5-flash-latest")
-
-    const { text } = await generateText({
-      model,
-      messages: [
-        {
-          role: "user",
-          content: [
+        const { text } = await generateText({
+          model,
+          messages: [
             {
-              type: "text",
-              text: "Respond with ONLY the main topic of this PDF in 2-5 words (no punctuation).",
-            },
-            {
-              type: "file",
-              data: await file.arrayBuffer(),
-              mimeType: "application/pdf",
-              filename: file.name,
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: "Respond with ONLY the main topic of this PDF in 2-5 words (no punctuation).",
+                },
+                {
+                  type: "file",
+                  data: await file.arrayBuffer(),
+                  mimeType: "application/pdf",
+                  filename: file.name,
+                },
+              ],
             },
           ],
-        },
-      ],
-    })
+        })
 
-    return json({ topic: cleanTopic(text) })
+        return json({ topic: cleanTopic(text) })
+      } catch (aiErr) {
+        console.warn("Gemini fallback:", aiErr)
+        /* fall through to filename-based extraction */
+      }
+    }
+
+    /* 3. Fallback: use filename -------------------------------------- */
+    return json({ topic: topicFromFilename(file.name), fallback: true })
   } catch (err) {
-    console.error("identify-topic error:", err)
-    // Soft-fallback so the client can continue
-    return json({ topic: "Unknown" })
+    console.error("identify-topic fatal error:", err)
+    return json({ topic: "Unknown", fallback: true })
   }
 }
