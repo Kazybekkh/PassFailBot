@@ -1,6 +1,5 @@
 import { cn } from "@/lib/utils"
-
-export type EyeState = "idle" | "focused" | "win" | "lose"
+import type { EyeState } from "@/types" // Assuming EyeState is declared in a separate file
 
 type EveEyesProps = {
   state: EyeState
