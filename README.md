@@ -1,30 +1,39 @@
-# Next.js Community Starter
 
-*Automatically synced with your [v0.dev](https://v0.dev) deployments*
+**PassFailBot** – An AI-powered study companion that converts any uploaded PDF into a timed multiple-choice quiz. Wager virtual coins on your target score and either win big or lose it all based on your performance.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/kazybek-khairullas-projects/v0-next-js-community-starter)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/0rdei8223LM)
+🔗 **Repository:** [https://github.com/Kazybekkh/PassFailBot.git](https://github.com/Kazybekkh/PassFailBot.git)
 
-## Overview
+## Tech Stack
 
-This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
+**Core Framework & Runtime:**
 
-## Deployment
+- **Next.js 15** – React framework with App Router
+- **React 19** – Front-end library
+- **TypeScript** – Type-safe JavaScript
+- **Node.js** – Runtime environment
 
-Your project is live at:
 
-**[https://vercel.com/kazybek-khairullas-projects/v0-next-js-community-starter](https://vercel.com/kazybek-khairullas-projects/v0-next-js-community-starter)**
+**AI & APIs:**
 
-## Build your app
+- **OpenAI API** – Quiz generation and PDF topic identification via AI SDK
 
-Continue building your app on:
 
-**[https://v0.dev/chat/projects/0rdei8223LM](https://v0.dev/chat/projects/0rdei8223LM)**
+**Styling & UI:**
 
-## How It Works
+- **Tailwind CSS** – Utility-first CSS framework
+- **shadcn/ui** – Component library built on Radix UI
+- **Radix UI** – Headless, accessible UI components
+- **Lucide React** – Icon library
+- **Custom CSS** – Retro-styled animations and Press Start 2P font
 
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+
+---
+
+**Key corrections made:**
+
+- Updated Next.js 14 → **Next.js 15** (as per package.json)
+- Updated React 18 → **React 19** (as per package.json)
+- Removed "CSS3 – Pixelated fonts, 8-bit animations" as it's not fully 8-bit themed
+- Added "AI SDK" for more accurate OpenAI integration description
+- Added "Lucide React" which is actually used for icons
+- Made the description more concise and accurate to the actual implementation
