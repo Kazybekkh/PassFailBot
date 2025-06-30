@@ -389,14 +389,14 @@ export default function PassFailBot() {
       })
 
       if (!res.ok) {
-        // Read JSON first, then fall back to raw text so we always get something meaningful
         let msg = `Server responded with ${res.status}`
+        const responseText = await res.text()
+        console.error("Raw error response from server:", responseText)
         try {
-          const data = await res.json()
+          const data = JSON.parse(responseText)
           if (data?.error) msg = data.error
         } catch {
-          const txt = await res.text().catch(() => "")
-          if (txt) msg = txt
+          if (responseText) msg = responseText
         }
         throw new Error(msg)
       }
