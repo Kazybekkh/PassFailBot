@@ -8,11 +8,10 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
-import { RobotScene, type EyeState } from "@/components/robot-scene"
-import { DialogueBox } from "@/components/dialogue-box"
 
 type GameState = "config" | "loading" | "quiz" | "result" | "cheated"
 type ConfigStep = "upload" | "target" | "bet" | "duration" | "confirm"
+type EyeState = "idle" | "focused" | "win" | "lose"
 
 type Question = {
   question: string
@@ -25,6 +24,51 @@ type Quiz = {
 }
 
 const initialBotMessage = "Hello! First, upload the PDF you want to be quizzed on."
+
+// Standalone Robot Head Component (Internal to this file)
+const RobotHead = ({ state }: { state: EyeState }) => (
+  <div className={cn("relative flex h-48 w-48 items-center justify-center gap-4", state === "idle" && "animate-float")}>
+    <div
+      className={cn(
+        "h-8 w-8 bg-[hsl(var(--foreground))] transition-all",
+        state === "focused" && "animate-squint",
+        state === "win" && "h-6 bg-[hsl(var(--pass))]",
+        state === "lose" && "h-10 w-6 bg-[hsl(var(--fail))]",
+      )}
+    />
+    <div
+      className={cn(
+        "h-8 w-8 bg-[hsl(var(--foreground))] transition-all",
+        state === "focused" && "animate-squint",
+        state === "win" && "h-6 bg-[hsl(var(--pass))]",
+        state === "lose" && "h-10 w-6 bg-[hsl(var(--fail))]",
+      )}
+    />
+    <div
+      className={cn(
+        "absolute bottom-[28%] h-6 w-16 bg-primary opacity-0 transition-opacity",
+        state === "win" && "opacity-100",
+      )}
+      style={{
+        maskImage: "radial-gradient(circle at 50% 0, transparent 20px, black 21px)",
+        WebkitMaskImage: "radial-gradient(circle at 50% 0, transparent 20px, black 21px)",
+      }}
+    />
+  </div>
+)
+
+// Standalone Dialogue Box Component (Internal to this file)
+const Dialogue = ({ text }: { text: string }) => (
+  <div className="relative mb-6 w-full">
+    <div className="flex min-h-32 w-full items-center justify-center rounded-lg border-2 border-border bg-card p-4 text-center text-lg font-normal leading-relaxed text-card-foreground">
+      <p className="h-full">{text}</p>
+    </div>
+    <div
+      className="absolute h-0 w-0 border-8 border-t-border border-transparent"
+      style={{ bottom: "-16px", left: "50%", transform: "translateX(-50%)" }}
+    />
+  </div>
+)
 
 export default function PassFailBot() {
   /* ──────────────────────── state ──────────────────────── */
@@ -256,8 +300,8 @@ export default function PassFailBot() {
   /* ───────────────────── config UI ─────────────────────── */
   const renderConfigStep = () => (
     <div className="flex flex-col items-center gap-4">
-      <RobotScene eyeState={eyeState} />
-      <DialogueBox text={botMessage} />
+      <RobotHead state={eyeState} />
+      <Dialogue text={botMessage} />
 
       <Card className="w-full max-w-md">
         <CardContent className="space-y-6 pt-6">
@@ -387,7 +431,7 @@ export default function PassFailBot() {
         return (
           <Card className="w-full max-w-md text-center p-8">
             <div className="flex flex-col items-center">
-              <RobotScene eyeState="focused" />
+              <RobotHead state="focused" />
               <p className="text-2xl animate-pulse mt-4">Generating your quiz...</p>
               <p className="mt-4 text-sm text-muted-foreground">
                 The AI is reading your PDF. This might take a moment.
@@ -453,7 +497,7 @@ export default function PassFailBot() {
         const won = finalScore >= targetScore
         return (
           <div className="flex flex-col items-center gap-4">
-            <RobotScene eyeState={won ? "win" : "lose"} />
+            <RobotHead state={won ? "win" : "lose"} />
             <Card className="w-full max-w-md text-center">
               <CardContent className="space-y-4 py-8">
                 <h2 className={cn("text-4xl font-bold", won ? "text-green-600" : "text-destructive")}>
