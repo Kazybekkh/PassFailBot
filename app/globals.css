@@ -1,266 +1,130 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-\
-@layer base \{\
-  :root \{
-    /* Pastel Pixel Classroom Palette */
-    --background-hex: #f4f4f4;
-\
---foreground-hex: #2d2d2d
-;
-\
---card-hex:#ffffff 
-;
-\
---card-foreground-hex: #2d2d2d
-;
-\
---popover-hex:#ffffff 
-;
-\
---popover-foreground-hex: #2d2d2d
-;
-\
---primary-hex: #2d2d2d
-;
-\
---primary-foreground-hex:#f4f4f4 
-;
-\
---secondary-hex:#e0e0e0 
-;
-\
---secondary-foreground-hex: #2d2d2d
-;
-\
---muted-hex:#e0e0e0 
-;
-\
---muted-foreground-hex: #757575
-;
-\
---accent-hex:#edd07e 
-;
-\
---accent-foreground-hex: #2d2d2d
-;
-\
---destructive-hex:#ff5252 
-;
-\
---destructive-foreground-hex:#f4f4f4 
-;
-\
---border-hex:#c0c0c0 
-;
-\
---input-hex:#c0c0c0 
-;
-\
---ring-hex:#edd07e 
-;
-\
---pass-hex: #4caf50
-;
-\
---fail-hex:#ff5252 
-;
-\
---coin-hex:#edd07e 
-;
-\
---background: 240 0% 96%
-; /* #f4f4f4 */
-\
---foreground: 0 0% 18%
-; /* #2d2d2d */
-\
---card: 0 0% 100%
-; /* #ffffff */
-\
---card-foreground: 0 0% 18%
-; /* #2d2d2d */
-\
---popover: 0 0% 100%
-;
-\
---popover-foreground: 0 0% 18%
-;
-\
---primary: 0 0% 18
-%
-;
---primary-foreground: 240 0% 96
-%
-;
---secondary: 0 0% 88
-%
-; /* #e0e0e0 */
---secondary-foreground: 0 0% 18
-%
-;
---muted: 0 0% 88
-%
-;
---muted-foreground: 0 0% 46
-%
-; /* #757575 */
---accent: 46 79% 71
-%
-; /* #edd07e */
---accent-foreground: 0 0% 18
-%
-;
---destructive: 0 100% 66
-%
-; /* #ff5252 */
---destructive-foreground: 240 0% 96
-%
-;
---border: 0 0% 75
-%
-; /* #c0c0c0 */
---input: 0 0% 75
-%
-;
---ring: 46 79% 71
-%
-;
---radius: 0.5rem
-;
 
---pass: 122 39% 49
-%
-; /* #4caf50 */
---fail: 0 100% 66
-%
-; /* #ff5252 */
---coin: 46 79% 71
-%
-; /* #edd07e */
-\}
-\}
+@layer base {
+  :root {
+    /* Retro Ghibli Palette */
+    --background-hex: #e0f7fa; /* Light Cyan */
+    --foreground-hex: #37474f; /* Blue Grey */
+    --card-hex: #ffffff;
+    --card-foreground-hex: #37474f;
+    --popover-hex: #ffffff;
+    --popover-foreground-hex: #37474f;
+    --primary-hex: #ff8a65; /* Light Orange/Coral */
+    --primary-foreground-hex: #ffffff;
+    --secondary-hex: #fff9c4; /* Pale Yellow */
+    --secondary-foreground-hex: #37474f;
+    --muted-hex: #cfd8dc; /* Lighter Blue Grey */
+    --muted-foreground-hex: #546e7a; /* Darker Blue Grey */
+    --accent-hex: #ffd600; /* Vivid Yellow */
+    --accent-foreground-hex: #37474f;
+    --destructive-hex: #e57373; /* Soft Red */
+    --destructive-foreground-hex: #ffffff;
+    --border-hex: #90a4ae; /* Blue Grey Light */
+    --input-hex: #b0bec5;
+    --ring-hex: #ff8a65;
+    --pass-hex: #81c784; /* Soft Green */
+    --fail-hex: #e57373; /* Soft Red */
+    --coin-hex: #ffd600; /* Vivid Yellow */
 
-@layer base \{
-  * \{
-    @apply border-border
-;
-\}
-  body \{
-    @apply bg-background text-foreground
-;
-background-image: url("/ghibli-background.png"
-)
-;
-background-size:cover 
-;
-background-position:center 
-;
-background-attachment:fixed 
-;
-image-rendering:pixelated 
-;
-font-family: var(--font-press-start-2p), system-ui, sans-serif
-;
-position:relative 
-;
-\} body::before \{ content: 
-""
-;
-position:absolute 
-;
-inset: 
-0
-;
-background-color: rgba(0, 0, 0, 0.15
-)
-;
-backdrop-filter: blur(2px
-)
-;
-z-index: 
-0
-;
-\}
+    --background: 200 60% 95%; /* #e0f7fa */
+    --foreground: 200 15% 29%; /* #37474f */
+    --card: 0 0% 100%;
+    --card-foreground: 200 15% 29%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 200 15% 29%;
+    --primary: 16 100% 70%; /* #ff8a65 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 56 100% 88%; /* #fff9c4 */
+    --secondary-foreground: 200 15% 29%;
+    --muted: 200 14% 84%; /* #cfd8dc */
+    --muted-foreground: 200 15% 41%; /* #546e7a */
+    --accent: 50 100% 50%; /* #ffd600 */
+    --accent-foreground: 200 15% 29%;
+    --destructive: 0 70% 74%; /* #e57373 */
+    --destructive-foreground: 0 0% 100%;
+    --border: 200 13% 62%; /* #90a4ae */
+    --input: 200 13% 70%; /* #b0bec5 */
+    --ring: 16 100% 70%;
+    --radius: 0.5rem;
 
-  .pixel-border \{
-    @apply border-4 border-double border-border
-;
-box-shadow: 0 0 0 2px var(--card-hex
-)
-; /* Use card color for clean edge */
-\}
-\}
+    --pass: 125 45% 64%; /* #81c784 */
+    --fail: 0 70% 74%; /* #e57373 */
+    --coin: 50 100% 50%; /* #ffd600 */
+  }
+}
 
-@layer components \{
-  .eye-container \{
-    @apply relative w-48 h-48 flex justify-center items-center gap-4
-;
-\}
-  .eye \{
-    @apply w-8 h-8
-; /* Square eyes */
-background-color: #89f7fe
-; /* Bright cyan */
-box-shadow: 0 0 0 4px #2d2d2d
-; /* 4px black border */
-transition: all 0.3s ease-in-out
-;
-image-rendering:pixelated 
-;
-\}
-  .eye-win \{
-    @apply h-6
-; /* Squinty happy eyes */
-background-color:#a5d6a7 
-; /* Light green */
-box-shadow: 0 0 0 4px #2d2d2d
-;
-\}
-  .eye-lose \{
-    @apply h-10 w-6
-; /* Sad, tall eyes */
-background-color:#ef9a9a 
-; /* Light red */
-box-shadow: 0 0 0 4px #2d2d2d
-;
-\}
-  .mouth \{
-    @apply absolute w-16 h-6 bg-primary opacity-0 transition-opacity duration-300
-;
-bottom: 28
-%
-;
-/* Create a smile shape using a mask */
--webkit-mask-image: radial-gradient(circle at 50% 0, transparent 20px, black 21px
-)
-;
-mask-image: radial-gradient(circle at 50% 0, transparent 20px, black 21px
-)
-;
-\}
-  .mouth-win \{
-    @apply opacity-100
-;
-\}
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    background-image: url("/ghibli-background.png");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    image-rendering: pixelated;
+    font-family: var(--font-press-start-2p), system-ui, sans-serif;
+    position: relative;
+  }
+  body::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(2px);
+    z-index: 0;
+  }
 
-  .dialogue-box \{
+  .pixel-border {
+    @apply border-4 border-double border-border;
+    box-shadow: 0 0 0 2px var(--card-hex); /* Use card color for clean edge */
+  }
+}
+
+@layer components {
+  .eye-container {
+    @apply relative w-48 h-48 flex justify-center items-center gap-4;
+  }
+  .eye {
+    @apply w-8 h-8; /* Square eyes */
+    background-color: #ffffff; /* Bright white */
+    border: 4px solid hsl(var(--foreground));
+    transition: all 0.3s ease-in-out;
+    image-rendering: pixelated;
+  }
+  .eye-win {
+    @apply h-6; /* Squinty happy eyes */
+    background-color: hsl(var(--pass));
+    border-color: hsl(var(--foreground));
+  }
+  .eye-lose {
+    @apply h-10 w-6; /* Sad, tall eyes */
+    background-color: hsl(var(--fail));
+    border-color: hsl(var(--foreground));
+  }
+  .mouth {
+    @apply absolute w-16 h-6 bg-primary opacity-0 transition-opacity duration-300;
+    bottom: 28%;
+    /* Create a smile shape using a mask */
+    -webkit-mask-image: radial-gradient(circle at 50% 0, transparent 20px, black 21px);
+    mask-image: radial-gradient(circle at 50% 0, transparent 20px, black 21px);
+  }
+  .mouth-win {
+    @apply opacity-100;
+  }
+
+  .dialogue-box {
     @apply relative w-full min-h-[8rem] mb-6 p-4 border-4 border-primary bg-background text-foreground text-lg leading-relaxed font-normal flex items-center justify-center text-center;
-    box-shadow: 0 0 0 4px var(--background-hex
-)
-;
-\}
+    box-shadow: 0 0 0 4px var(--background-hex);
+  }
 
-  .dialogue-caret \{
-    @apply absolute w-0 h-0 border-8 border-transparent border-t-primary
-;
-bottom: -20px
-;
-left: 50
-%
-;
-transform: translateX(-50%
-)
-;
-\} \}
+  .dialogue-caret {
+    @apply absolute w-0 h-0 border-8 border-transparent border-t-primary;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
