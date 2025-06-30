@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ---------- Base theme ---------- */
 @layer base {
   :root {
     /* Default Theme */
@@ -31,9 +32,7 @@
     --fail: 0 100% 66%; /* #ff5252 */
     --coin: 46 79% 71%; /* #edd07e */
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
@@ -43,23 +42,24 @@
   }
 }
 
+/* ---------- Components ---------- */
 @layer components {
   .eye-container {
     @apply relative w-48 h-48 flex justify-center items-center gap-4;
   }
+
   .eye {
-    @apply w-8 h-8; /* Simple square eyes */
+    @apply w-8 h-8;
     background-color: hsl(var(--foreground));
     transition: all 0.3s ease-in-out;
   }
   .eye-win {
-    @apply h-6; /* Squinty happy eyes */
-    background-color: hsl(var(--pass));
+    @apply h-6  bg-[hsl(var(--pass))];
   }
   .eye-lose {
-    @apply h-10 w-6; /* Sad, tall eyes */
-    background-color: hsl(var(--fail));
+    @apply h-10 w-6 bg-[hsl(var(--fail))];
   }
+
   .mouth {
     @apply absolute w-16 h-6 bg-primary opacity-0 transition-opacity duration-300;
     bottom: 28%;
@@ -70,11 +70,12 @@
     @apply opacity-100;
   }
 
+  /* --- FIXED: correct whitespace between utilities --- */
   .dialogue-box {
     @apply relative w-full min-h-[8rem] mb-6
-         p-4 border-2 border-border bg-card text-card-foreground
-         text-lg leading-relaxed font-normal
-         flex items-center justify-center text-center rounded-lg;
+           p-4 border-2 border-border bg-card text-card-foreground
+           text-lg leading-relaxed font-normal
+           flex items-center justify-center text-center rounded-lg;
   }
 
   .dialogue-caret {
