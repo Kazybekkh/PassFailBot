@@ -2,17 +2,24 @@ import { createOpenAI } from "@ai-sdk/openai"
 import { generateObject, APIError } from "ai"
 import { z } from "zod"
 
-const OPENAI_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY
-if (!OPENAI_KEY) {
-  throw new Error("NEXT_PUBLIC_OPENAI_API_KEY is missing – add it in your Vercel / .env project settings.")
-}
+// NOTE: Don't check for key here, check inside the handler
 
-const openai = createOpenAI({ apiKey: OPENAI_KEY })
 export const maxDuration = 60 // seconds for Next-lite timeout
 const MAX_FILE_BYTES = 8_000_000
 
 export async function POST(req: Request) {
   try {
+    // 1. Validate API Key
+    const OPENAI_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY
+    if (!OPENAI_KEY) {
+      return jsonError(
+        "OpenAI API key is not configured. Please add NEXT_PUBLIC_OPENAI_API_KEY to your environment variables.",
+        500,
+      )
+    }
+    const openai = createOpenAI({ apiKey: OPENAI_KEY })
+
+    // 2. Validate Request Body
     const formData = await req.formData()
     const file = formData.get("file") as File | null
     const quizStyle = formData.get("style") as "strict" | "similar" | null
@@ -21,10 +28,11 @@ export async function POST(req: Request) {
     if (!quizStyle) return jsonError("Quiz style missing", 400)
     if (file.size > MAX_FILE_BYTES) return jsonError("PDF larger than 8 MB – upload a smaller file.", 413)
 
+    // 3. Call AI
     const strictPrompt =
-      "Based on this PDF, generate a challenging 10-question multiple-choice quiz. For each question give 4 options and specify the correct answer."
+      "Based on this PDF, generate a challenging quiz of around 10 multiple-choice questions. For each question, provide 4 options and specify the correct answer."
     const similarPrompt =
-      "Study this PDF’s style and difficulty. Create a *new* 10-question multiple-choice quiz of similar difficulty (do not copy). If math appears, use plain-text math (no LaTeX). Provide 4 options per question and mark the correct one."
+      "Study this PDF’s style and difficulty. Create a *new* quiz of around 10 multiple-choice questions with similar difficulty (do not copy). If math appears, use plain-text math (no LaTeX). Provide 4 options per question and mark the correct one."
     const promptText = quizStyle === "similar" ? similarPrompt : strictPrompt
 
     const { object: quiz } = await generateObject({
@@ -39,7 +47,8 @@ export async function POST(req: Request) {
             }),
           )
           .min(5)
-          .max(15),
+          .max(15)
+          .describe("An array of 5 to 15 questions for the quiz."),
       }),
       messages: [
         {
@@ -61,7 +70,6 @@ export async function POST(req: Request) {
   } catch (err) {
     console.error("generate-quiz:", err)
 
-    // Custom handling for common failure modes
     let status = apiStatus(err)
     let message = apiMessage(err)
 
@@ -83,12 +91,13 @@ function jsonError(message: string, status = 500) {
   })
 }
 
-function apiStatus(err: unknown) {
-  return err instanceof APIError ? err.status : 500
+function apiStatus(err: unknown): number {
+  if (err instanceof APIError) return err.status
+  return 500
 }
 
-function apiMessage(err: unknown) {
+function apiMessage(err: unknown): string {
   if (err instanceof APIError) return err.message
   if (err instanceof Error) return err.message
-  return "Unknown server error"
+  return "An unknown error occurred."
 }
