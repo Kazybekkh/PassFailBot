@@ -6,8 +6,8 @@ import { z } from "zod"
 /*  CONSTANTS & HELPERS                                                       */
 /* -------------------------------------------------------------------------- */
 
-const MAX_FILE_BYTES = 8_000_000 // 8 MB – OpenAI’s file limit
-const MODEL_NAME = "claude-3-sonnet-20240229" // supports PDF input
+const MAX_FILE_BYTES = 8_000_000 // 8 MB – Claude’s current limit
+const MODEL_NAME = "claude-3-5-sonnet-20240620" // supports PDF input
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
