@@ -86,6 +86,11 @@
 }
 
 @layer components {
+  .robot-head-container {
+    @apply relative w-48 h-48 bg-contain bg-no-repeat bg-center;
+    background-image: url("/robot-head.png");
+  }
+
   .eye-container {
     @apply absolute inset-0 flex justify-center items-center gap-3;
     /* Nudge the eyes down slightly to fit the visor */
