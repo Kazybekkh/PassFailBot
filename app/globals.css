@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ---------- Base theme ---------- */
 @layer base {
   :root {
     /* Default Theme */
@@ -27,9 +28,9 @@
     --radius: 0.5rem;
 
     /* Functional Colors */
-    --pass: 122 39% 49%; /* #4caf50 */
-    --fail: 0 100% 66%; /* #ff5252 */
-    --coin: 46 79% 71%; /* #edd07e */
+    --pass: 122 39% 49%;
+    --fail: 0 100% 66%;
+    --coin: 46 79% 71%;
   }
 
   * {
@@ -37,46 +38,45 @@
   }
 
   body {
-    @apply bg-background text-foreground;
-    font-family: var(--font-press-start-2p), system-ui, sans-serif;
+    @apply bg-background text-foreground font-sans;
   }
 }
 
+/* ---------- Components ---------- */
 @layer components {
-  /* Robot Face Components */
+  /* Robot eyes / mouth */
   .eye-container {
     @apply relative flex h-48 w-48 items-center justify-center gap-4;
   }
-
   .eye {
-    @apply h-8 w-8 bg-[hsl(var(--foreground))] transition-all duration-300 ease-in-out;
+    @apply h-8  w-8  bg-[hsl(var(--foreground))] transition-all;
   }
-
   .eye-win {
-    @apply h-6 bg-[hsl(var(--pass))];
+    @apply h-6        bg-[hsl(var(--pass))];
   }
-
   .eye-lose {
-    @apply h-10 w-6 bg-[hsl(var(--fail))];
+    @apply h-10 w-6   bg-[hsl(var(--fail))];
   }
 
   .mouth {
-    @apply absolute bottom-[28%] h-6 w-16 bg-primary opacity-0 transition-opacity duration-300;
+    @apply absolute bottom-[28%] h-6 w-16 bg-primary opacity-0 transition-opacity;
     -webkit-mask-image: radial-gradient(circle at 50% 0, transparent 20px, black 21px);
     mask-image: radial-gradient(circle at 50% 0, transparent 20px, black 21px);
   }
-
   .mouth-win {
     @apply opacity-100;
   }
 
-  /* Dialogue Box Components */
+  /* Dialogue bubble */
   .dialogue-box {
-    @apply relative mb-6 flex w-full min-h-[8rem] items-center justify-center rounded-lg border-2 border-border bg-card p-4 text-center text-lg font-normal leading-relaxed text-card-foreground;
+    /* 8 rem = Tailwind’s spacing scale 32 */
+    @apply relative flex w-full min-h-32 items-center justify-center
+           rounded-lg border-2 border-border bg-card p-4
+           text-center text-lg font-normal leading-relaxed text-card-foreground mb-6;
   }
 
   .dialogue-caret {
-    @apply absolute h-0 w-0 border-8 border-t-border border-transparent;
+    @apply absolute h-0 w-0 border-8 border-transparent border-t-border;
     bottom: -16px;
     left: 50%;
     transform: translateX(-50%);
