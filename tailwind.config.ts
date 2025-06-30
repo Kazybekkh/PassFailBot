@@ -18,6 +18,7 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: ["var(--font-press-start-2p)", "system-ui", "sans-serif"],
+        body: ["var(--font-inter)", "system-ui", "sans-serif"], // UPDATED: Add body font family
       },
       colors: {
         border: "hsl(var(--border))",

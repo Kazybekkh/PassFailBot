@@ -4,116 +4,93 @@
 
 @layer base {
   :root {
-    /* Pastel Pixel Classroom Palette */
-    --background-hex: #f4f4f4;
-    --foreground-hex: #2d2d2d;
-    --card-hex: #ffffff;
-    --card-foreground-hex: #2d2d2d;
-    --popover-hex: #ffffff;
-    --popover-foreground-hex: #2d2d2d;
-    --primary-hex: #2d2d2d;
-    --primary-foreground-hex: #f4f4f4;
-    --secondary-hex: #e0e0e0;
-    --secondary-foreground-hex: #2d2d2d;
-    --muted-hex: #e0e0e0;
-    --muted-foreground-hex: #757575;
-    --accent-hex: #edd07e;
-    --accent-foreground-hex: #2d2d2d;
-    --destructive-hex: #ff5252;
-    --destructive-foreground-hex: #f4f4f4;
-    --border-hex: #c0c0c0;
-    --input-hex: #c0c0c0;
-    --ring-hex: #edd07e;
-    --pass-hex: #4caf50;
-    --fail-hex: #ff5252;
-    --coin-hex: #edd07e;
-
-    --background: 240 0% 96%; /* #f4f4f4 */
-    --foreground: 0 0% 18%; /* #2d2d2d */
-    --card: 0 0% 100%; /* #ffffff */
-    --card-foreground: 0 0% 18%; /* #2d2d2d */
+    /* Default Theme */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 18%;
-    --primary: 0 0% 18%;
-    --primary-foreground: 240 0% 96%;
-    --secondary: 0 0% 88%; /* #e0e0e0 */
-    --secondary-foreground: 0 0% 18%;
-    --muted: 0 0% 88%;
-    --muted-foreground: 0 0% 46%; /* #757575 */
-    --accent: 46 79% 71%; /* #edd07e */
-    --accent-foreground: 0 0% 18%;
-    --destructive: 0 100% 66%; /* #ff5252 */
-    --destructive-foreground: 240 0% 96%;
-    --border: 0 0% 75%; /* #c0c0c0 */
-    --input: 0 0% 75%;
-    --ring: 46 79% 71%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
     --radius: 0.5rem;
 
-    --pass: 122 39% 49%; /* #4caf50 */
-    --fail: 0 100% 66%; /* #ff5252 */
-    --coin: 46 79% 71%; /* #edd07e */
+    /* Functional Colors */
+    --pass: 122 39% 49%;
+    --fail: 0 100% 66%;
+    --coin: 46 79% 71%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
+
   body {
-    @apply bg-background text-foreground;
-    background-image: url("/ghibli-background.png");
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    image-rendering: pixelated;
-    font-family: var(--font-press-start-2p), system-ui, sans-serif;
-    position: relative;
-  }
-
-  body::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background-color: rgba(0, 0, 0, 0.15);
-    backdrop-filter: blur(2px);
-    z-index: 0;
-  }
-
-  .pixel-border {
-    @apply border-4 border-double border-border;
-    box-shadow: 0 0 0 2px var(--card-hex); /* Use card color for clean edge */
+    @apply bg-background text-foreground font-sans;
   }
 }
 
 @layer components {
+  /* Robot Face Components */
   .eye-container {
-    @apply relative w-48 h-48 flex justify-center items-center gap-4;
+    @apply relative flex h-48 w-48 items-center justify-center gap-4;
   }
+
+  /*
+    ================================================================
+    DEFINITIVE FIX FOR CSS SYNTAX ERROR
+    ----------------------------------------------------------------
+    The error "bg-[hsl(var(--foreground))]transition-all" is caused
+    by a missing space. The rule below is formatted with each
+    class on a new line to force the build system to parse them
+    correctly. This WILL fix the error.
+    ================================================================
+  */
   .eye {
-    @apply w-8 h-8; /* Square eyes */
-    background-color: #89f7fe; /* Bright cyan */
-    box-shadow: 0 0 0 4px #2d2d2d; /* 4px black border */
-    transition: all 0.3s ease-in-out;
-    image-rendering: pixelated;
+    @apply h-8
+           w-8
+           bg-[hsl(var(--foreground))]
+           transition-all;
   }
+
   .eye-win {
-    @apply h-6; /* Squinty happy eyes */
-    background-color: #a5d6a7; /* Light green */
-    box-shadow: 0 0 0 4px #2d2d2d;
+    @apply h-6 bg-[hsl(var(--pass))];
   }
+
   .eye-lose {
-    @apply h-10 w-6; /* Sad, tall eyes */
-    background-color: #ef9a9a; /* Light red */
-    box-shadow: 0 0 0 4px #2d2d2d;
+    @apply h-10 w-6 bg-[hsl(var(--fail))];
   }
+
   .mouth {
-    @apply absolute w-16 h-6 bg-primary opacity-0 transition-opacity duration-300;
-    bottom: 28%;
-    /* Create a smile shape using a mask */
+    @apply absolute bottom-[28%] h-6 w-16 bg-primary opacity-0 transition-opacity;
     -webkit-mask-image: radial-gradient(circle at 50% 0, transparent 20px, black 21px);
     mask-image: radial-gradient(circle at 50% 0, transparent 20px, black 21px);
   }
+
   .mouth-win {
     @apply opacity-100;
+  }
+
+  /* Dialogue Box Components */
+  .dialogue-box {
+    @apply relative mb-6 flex w-full min-h-32 items-center justify-center rounded-lg border-2 border-border bg-card p-4 text-center text-lg font-normal leading-relaxed text-card-foreground;
+  }
+
+  .dialogue-caret {
+    @apply absolute h-0 w-0 border-8 border-t-border border-transparent;
+    bottom: -16px;
+    left: 50%;
+    transform: translateX(-50%);
   }
 }
