@@ -15,6 +15,7 @@ import {
   CheckCircle,
   XCircle,
   Loader2,
+  FlaskConical,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -46,7 +47,7 @@ type LastBet = {
   payout: number
 }
 
-const initialBotMessage = "Hello! First, upload the PDF you want to be quizzed on."
+const initialBotMessage = "Hello! First, upload the PDF you want to be quizzed on. Or, try the demo quiz!"
 
 // Standalone Robot Head Component
 const RobotHead = ({ state }: { state: EyeState }) => (
@@ -257,7 +258,6 @@ export default function PassFailBot() {
       }
 
       const { topic } = await res.json()
-      // UPDATED: Combined the topic and file loaded messages into one clear sentence.
       setBotMessage(`Okay, I've analyzed your PDF on '${topic}'. The file "${file.name}" is locked and loaded.`)
     } catch (err: any) {
       const message = err?.message ?? "Unexpected error."
@@ -417,6 +417,34 @@ export default function PassFailBot() {
     }
   }
 
+  const handleLoadDemoQuiz = async () => {
+    try {
+      setGameState("loading")
+      setEyeState("focused")
+      const res = await fetch("/demo-quiz.json")
+      if (!res.ok) {
+        throw new Error("Failed to load demo file.")
+      }
+      const demoQuiz: Quiz = await res.json()
+
+      // Set default parameters for the demo quiz
+      setTargetScore(50)
+      setBetAmount(100)
+      setDuration(10)
+      setCoins((prev) => prev - 100)
+
+      setQuiz(demoQuiz)
+      setUserAnswers(new Array(demoQuiz.questions.length).fill(null))
+      setTimeLeft(10 * 60) // 10 minutes for demo
+      setGameState("quiz")
+    } catch (err: any) {
+      setError(err.message ?? "Could not load demo quiz.")
+      setBotMessage("Oh no, something went wrong with the demo.")
+      setGameState("config")
+      setEyeState("lose")
+    }
+  }
+
   /* ─────────────────── in-quiz helpers ─────────────────── */
   const handleAnswerSelect = (option: string) => {
     const next = [...userAnswers]
@@ -483,28 +511,39 @@ export default function PassFailBot() {
       <Card className="w-full max-w-md">
         <CardContent className="space-y-6 pt-6">
           {configStep === "upload" && (
-            <label
-              htmlFor="file-upload"
-              className={cn(
-                "flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-secondary",
-                isIdentifyingTopic && "cursor-not-allowed opacity-50",
-              )}
-            >
-              <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                {isIdentifyingTopic ? <Loader2 className="animate-spin" size={32} /> : <Upload size={32} />}
-                <p className="mt-2 text-sm">
-                  {isIdentifyingTopic ? "Analyzing..." : pdfFile ? pdfFile.name : "Upload Lecture PDF"}
-                </p>
+            <div className="space-y-4">
+              <label
+                htmlFor="file-upload"
+                className={cn(
+                  "flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-secondary",
+                  isIdentifyingTopic && "cursor-not-allowed opacity-50",
+                )}
+              >
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  {isIdentifyingTopic ? <Loader2 className="animate-spin" size={32} /> : <Upload size={32} />}
+                  <p className="mt-2 text-sm">
+                    {isIdentifyingTopic ? "Analyzing..." : pdfFile ? pdfFile.name : "Upload Lecture PDF"}
+                  </p>
+                </div>
+                <input
+                  id="file-upload"
+                  type="file"
+                  className="hidden"
+                  accept="application/pdf"
+                  onChange={handleFileChange}
+                  disabled={isIdentifyingTopic}
+                />
+              </label>
+              <div className="relative flex items-center">
+                <div className="flex-grow border-t border-gray-300"></div>
+                <span className="flex-shrink mx-4 text-gray-500 text-sm">OR</span>
+                <div className="flex-grow border-t border-gray-300"></div>
               </div>
-              <input
-                id="file-upload"
-                type="file"
-                className="hidden"
-                accept="application/pdf"
-                onChange={handleFileChange}
-                disabled={isIdentifyingTopic}
-              />
-            </label>
+              <Button variant="outline" className="w-full bg-transparent" onClick={handleLoadDemoQuiz}>
+                <FlaskConical className="mr-2 h-4 w-4" />
+                Load Demo Quiz
+              </Button>
+            </div>
           )}
 
           {configStep === "style" && (

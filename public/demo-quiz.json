@@ -1,0 +1,94 @@
+{
+  "questions": [
+    {
+      "question": "What is the first step in finding the eigenvalues of a 2x2 matrix A?",
+      "options": [
+        "Solving the characteristic equation det(A - λI) = 0",
+        "Finding the inverse of the matrix A",
+        "Calculating the trace of the matrix",
+        "Multiplying the matrix by a vector"
+      ],
+      "answer": "Solving the characteristic equation det(A - λI) = 0"
+    },
+    {
+      "question": "A square matrix A is invertible if and only if:",
+      "options": [
+        "Its determinant is zero",
+        "Its determinant is non-zero",
+        "It is a symmetric matrix",
+        "All its eigenvalues are positive"
+      ],
+      "answer": "Its determinant is non-zero"
+    },
+    {
+      "question": "In Euler's method for solving an ODE, what does the step size 'h' represent?",
+      "options": [
+        "The accuracy of the initial condition",
+        "The increment in the independent variable (e.g., x) for each iteration",
+        "The value of the dependent variable y",
+        "The learning rate of the algorithm"
+      ],
+      "answer": "The increment in the independent variable (e.g., x) for each iteration"
+    },
+    {
+      "question": "A discrete random variable X that represents the number of trials until the first success follows which distribution?",
+      "options": ["Binomial Distribution", "Poisson Distribution", "Geometric Distribution", "Normal Distribution"],
+      "answer": "Geometric Distribution"
+    },
+    {
+      "question": "In a Markov chain, what does the term 'irreducibility' mean?",
+      "options": [
+        "The chain has no cycles",
+        "The chain will eventually reach a steady state",
+        "It is possible to go from any state to any other state",
+        "All states have a period of 1"
+      ],
+      "answer": "It is possible to go from any state to any other state"
+    },
+    {
+      "question": "What is the primary role of the learning rate in the gradient descent algorithm?",
+      "options": [
+        "To determine the initial guess",
+        "To calculate the gradient of the function",
+        "To control the size of the steps taken towards the minimum",
+        "To decide when the algorithm has converged"
+      ],
+      "answer": "To control the size of the steps taken towards the minimum"
+    },
+    {
+      "question": "What is a potential issue if the learning rate in gradient descent is set too large?",
+      "options": [
+        "The algorithm will converge very slowly",
+        "The algorithm may overshoot the minimum and fail to converge",
+        "The algorithm will find the global minimum instead of a local one",
+        "The gradient calculation becomes more accurate"
+      ],
+      "answer": "The algorithm may overshoot the minimum and fail to converge"
+    },
+    {
+      "question": "The Newton-Raphson method is an iterative procedure used for finding:",
+      "options": [
+        "Eigenvalues of a matrix",
+        "The steady-state of a Markov chain",
+        "The minimum of a function",
+        "Approximate roots of a real-valued function"
+      ],
+      "answer": "Approximate roots of a real-valued function"
+    },
+    {
+      "question": "In a discrete-time Markov chain, what must be true for all rows in the transition matrix P?",
+      "options": [
+        "The sum of the elements in each row must be 1",
+        "The sum of the elements in each column must be 1",
+        "All elements must be greater than 1",
+        "The diagonal elements must be zero"
+      ],
+      "answer": "The sum of the elements in each row must be 1"
+    },
+    {
+      "question": "Using Euler's method for the ODE dy/dx = 4x + 3y with y(0) = 0 and h = 0.01, what is the value of y1?",
+      "options": ["0.01", "0.04", "0.03", "0"],
+      "answer": "0"
+    }
+  ]
+}
