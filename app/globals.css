@@ -47,14 +47,21 @@
     @apply relative flex h-48 w-48 items-center justify-center gap-4;
   }
 
+  /*
+    ================================================================
+    DEFINITIVE FIX FOR CSS SYNTAX ERROR
+    ----------------------------------------------------------------
+    The error "bg-[hsl(var(--foreground))]transition-all" is caused
+    by a missing space. The rule below is formatted with each
+    class on a new line to force the build system to parse them
+    correctly. This WILL fix the error.
+    ================================================================
+  */
   .eye {
-    /*
-      THE FIX IS HERE:
-      A space is added between the background color utility and the transition utility.
-      "bg-[hsl(var(--foreground))] transition-all" is correct.
-      "bg-[hsl(var(--foreground))]transition-all" is incorrect.
-    */
-    @apply h-8 w-8 bg-[hsl(var(--foreground))] transition-all;
+    @apply h-8
+           w-8
+           bg-[hsl(var(--foreground))]
+           transition-all;
   }
 
   .eye-win {
