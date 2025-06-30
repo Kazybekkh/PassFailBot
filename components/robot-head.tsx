@@ -7,7 +7,13 @@ type RobotHeadProps = {
 
 export function RobotHead({ state }: RobotHeadProps) {
   return (
-    <div className={cn("robot-head-container", state === "idle" && "animate-float")}>
+    <div
+      className={cn(
+        "robot-head-container",
+        "[filter:drop-shadow(0_0_8px_rgba(79,172,254,0.6))]",
+        state === "idle" && "animate-float",
+      )}
+    >
       <EveEyes state={state} />
     </div>
   )
