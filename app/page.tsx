@@ -31,18 +31,18 @@ const RobotHead = ({ state }: { state: EyeState }) => (
   <div className={cn("relative flex h-48 w-48 items-center justify-center gap-4", state === "idle" && "animate-float")}>
     <div
       className={cn(
-        "h-8 w-8 rounded-sm bg-blue-500 border-2 border-gray-800 transition-all", // UPDATED: Blue eyes with dark grey border
+        "h-10 w-10 rounded-sm bg-blue-400 border-2 border-gray-800 transition-all", // UPDATED: Bigger, lighter blue eyes
         state === "focused" && "animate-squint",
-        state === "win" && "bg-[hsl(var(--pass))] border-green-700 h-6", // Win state overrides base colors
-        state === "lose" && "bg-[hsl(var(--fail))] border-red-700 h-10 w-6", // Lose state overrides base colors
+        state === "win" && "bg-[hsl(var(--pass))] border-green-700 h-8", // Adjusted win state
+        state === "lose" && "bg-[hsl(var(--fail))] border-red-700 h-12 w-8", // Adjusted lose state
       )}
     />
     <div
       className={cn(
-        "h-8 w-8 rounded-sm bg-blue-500 border-2 border-gray-800 transition-all", // UPDATED: Blue eyes with dark grey border
+        "h-10 w-10 rounded-sm bg-blue-400 border-2 border-gray-800 transition-all", // UPDATED: Bigger, lighter blue eyes
         state === "focused" && "animate-squint",
-        state === "win" && "bg-[hsl(var(--pass))] border-green-700 h-6", // Win state overrides base colors
-        state === "lose" && "bg-[hsl(var(--fail))] border-red-700 h-10 w-6", // Lose state overrides base colors
+        state === "win" && "bg-[hsl(var(--pass))] border-green-700 h-8", // Adjusted win state
+        state === "lose" && "bg-[hsl(var(--fail))] border-red-700 h-12 w-8", // Adjusted lose state
       )}
     />
     <div
@@ -186,7 +186,7 @@ export default function PassFailBot() {
         break
       case "duration":
         setConfigStep("bet")
-        setBotMessage("Time to raise the stakes. How many coins will you bet?")
+        setBotMessage("How many coins will you bet?")
         break
       case "confirm":
         setConfigStep("duration")
