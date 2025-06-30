@@ -1,6 +1,13 @@
-import { openai } from "@ai-sdk/openai"
-import { generateObject } from "ai"
+import { createOpenAI } from "@ai-sdk/openai"
+import { generateObject, APIError } from "ai"
 import { z } from "zod"
+
+const OPENAI_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY
+
+if (!OPENAI_KEY) throw new Error("NEXT_PUBLIC_OPENAI_API_KEY is missing. Add it in your Vercel project settings.")
+
+// create a provider instance that works in the browser runtime
+const openai = createOpenAI({ apiKey: OPENAI_KEY })
 
 export const maxDuration = 60 // Extend timeout for AI generation
 
@@ -61,7 +68,11 @@ export async function POST(req: Request) {
     })
   } catch (error) {
     console.error(error)
-    return new Response(JSON.stringify({ error: "Failed to generate quiz." }), {
+    let errorMessage = "Failed to generate quiz."
+    if (error instanceof APIError && error.status === 401) {
+      errorMessage = "Invalid or missing OpenAI key. Check NEXT_PUBLIC_OPENAI_API_KEY in your env vars."
+    }
+    return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     })
