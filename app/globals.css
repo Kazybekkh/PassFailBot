@@ -49,7 +49,7 @@
     @apply relative flex h-48 w-48 items-center justify-center gap-4;
   }
   .eye {
-    @apply h-8  w-8  bg-[hsl(var(--foreground))] transition-all;
+    @apply h-8 w-8 bg-[hsl(var(--foreground))] transition-all;
   }
   .eye-win {
     @apply h-6        bg-[hsl(var(--pass))];
