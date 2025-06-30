@@ -71,7 +71,6 @@
   }
 
   .dialogue-box {
-    /* NOTE: split the two utilities so Tailwind never joins them */
     @apply relative w-full min-h-[8rem] mb-6
            p-4 border-2 border-border bg-card text-card-foreground
            text-lg leading-relaxed font-normal
