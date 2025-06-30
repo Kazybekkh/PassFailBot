@@ -94,11 +94,11 @@ export default function PassFailBot() {
     if (file && file.type === "application/pdf") {
       setPdfFile(file)
       setError(null)
-      setBotMessage(`Got it! "${file.name}" is locked in.`)
+      setBotMessage(`Got it! "${file.name}" is locked and loaded.`)
     } else {
       setPdfFile(null)
       setError("Please upload a valid PDF file.")
-      setBotMessage("Whoops, that's not a PDF. Try again!")
+      setBotMessage("Whoops, that doesn't look like a PDF. Please try again.")
     }
   }
 
@@ -107,7 +107,7 @@ export default function PassFailBot() {
     switch (configStep) {
       case "upload":
         setConfigStep("target")
-        setBotMessage("Okay, what's your target score? Use the slider.")
+        setBotMessage("Okay, what's your target score? Use the slider to set a goal.")
         break
       case "target":
         setConfigStep("bet")
@@ -119,7 +119,7 @@ export default function PassFailBot() {
         break
       case "duration":
         setConfigStep("confirm")
-        setBotMessage("All set! Does this look right?")
+        setBotMessage("All set! Review your choices and let's begin.")
         break
     }
   }
@@ -133,25 +133,25 @@ export default function PassFailBot() {
         break
       case "bet":
         setConfigStep("target")
-        setBotMessage("Okay, what's your target score?")
+        setBotMessage("Okay, what's your target score? Use the slider to set a goal.")
         break
       case "duration":
         setConfigStep("bet")
-        setBotMessage("How many coins will you bet?")
+        setBotMessage("Time to raise the stakes. How many coins will you bet?")
         break
       case "confirm":
         setConfigStep("duration")
-        setBotMessage("Choose a duration.")
+        setBotMessage("How much time do you need? Choose a duration.")
         break
     }
   }
 
   const handleTargetChange = (v: number) => {
     setTargetScore(v)
-    if (v === 100) setBotMessage("100%?! Are you sure about that?")
-    else if (v >= 70) setBotMessage("Feeling confident, huh?")
-    else if (v >= 40) setBotMessage("A reasonable target.")
-    else setBotMessage("Playing it safe, I see.")
+    if (v === 100) setBotMessage("100%?! A perfect score... a bold and difficult challenge.")
+    else if (v >= 70) setBotMessage("Feeling confident, huh? A worthy goal.")
+    else if (v >= 40) setBotMessage("A reasonable target. Let's see if you can hit it.")
+    else setBotMessage("Playing it safe, I see. A wise strategy.")
   }
 
   const handleBetChange = (v: number) => {
@@ -159,14 +159,14 @@ export default function PassFailBot() {
     const ratio = v / coins
     if (ratio === 1) setBotMessage("All in! Fortune favors the bold.")
     else if (ratio > 0.75) setBotMessage("Going big! I like your style.")
-    else if (ratio > 0.25) setBotMessage("A respectable bet.")
-    else setBotMessage("A careful wager. Understood.")
+    else if (ratio > 0.25) setBotMessage("A respectable bet. Good luck!")
+    else setBotMessage("A cautious wager. I understand.")
   }
 
   const handleDurationChange = (v: number) => {
     setDuration(v)
-    if (v >= 60) setBotMessage("An hour should be plenty.")
-    else if (v >= 30) setBotMessage(`${v} minutes. Sounds good.`)
+    if (v >= 60) setBotMessage("An hour should be plenty of time. No pressure!")
+    else if (v >= 30) setBotMessage(`${v} minutes. A good amount of time to focus.`)
     else setBotMessage(`${v} minutes. Quick and decisive!`)
   }
 
