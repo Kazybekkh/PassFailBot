@@ -236,6 +236,7 @@ export default function PassFailBot() {
       })
 
       if (!res.ok) {
+        // 5xx from the server → treat as a soft-failure and fall back
         let msg = `Server responded with ${res.status}`
         try {
           const data = await res.json()
@@ -244,7 +245,15 @@ export default function PassFailBot() {
           const txt = await res.text().catch(() => "")
           if (txt) msg = txt
         }
-        throw new Error(msg)
+
+        // Show the message to the user but DON’T abort the flow
+        console.error("identify-topic:", msg)
+        setBotMessage(
+          `Couldn't identify the topic (${msg}). No worries – I can still create a quiz from "${file.name}".`,
+        )
+        setIsIdentifyingTopic(false)
+        setEyeState("idle")
+        return
       }
 
       const { topic } = await res.json()
