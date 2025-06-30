@@ -220,6 +220,15 @@ export default function PassFailBot() {
       return
     }
 
+    // Check file size (limit to 5MB for better API compatibility)
+    const maxFileSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (file.size > maxFileSize) {
+      setPdfFile(null)
+      setError("File too large. Please upload a PDF smaller than 5MB.")
+      setBotMessage("Whoa! That PDF is too big for me to handle. Please upload a smaller file (under 5MB).")
+      return
+    }
+
     setPdfFile(file)
     setError(null)
     setIsIdentifyingTopic(true)
@@ -236,6 +245,12 @@ export default function PassFailBot() {
       })
 
       if (!res.ok) {
+        if (res.status === 413) {
+          throw new Error("File too large for processing. Please try a smaller PDF.")
+        }
+        if (res.status === 429) {
+          throw new Error("API quota exceeded. Please try again later.")
+        }
         throw new Error("Could not identify the topic.")
       }
 
@@ -244,7 +259,8 @@ export default function PassFailBot() {
       setBotMessage(`Okay, I've analyzed your PDF on '${topic}'. The file "${file.name}" is locked and loaded.`)
     } catch (err) {
       console.error(err)
-      setBotMessage(`Got it! Your file "${file.name}" is locked and loaded.`) // Fallback message
+      const errorMessage = err instanceof Error ? err.message : "Could not identify the topic."
+      setBotMessage(`Hmm, there was an issue: ${errorMessage} Let's try continuing anyway with your file "${file.name}".`)
     } finally {
       setIsIdentifyingTopic(false)
       setEyeState("idle")
@@ -367,7 +383,18 @@ export default function PassFailBot() {
         method: "POST",
         body: formData,
       })
-      if (!res.ok) throw new Error("Failed to generate quiz.")
+      
+      if (!res.ok) {
+        if (res.status === 413) {
+          throw new Error("PDF file too large. Please upload a smaller file (under 5MB).")
+        } else if (res.status === 429) {
+          throw new Error("API quota exceeded. Please try again later.")
+        } else {
+          const errorData = await res.json().catch(() => ({}))
+          throw new Error(errorData.error || "Failed to generate quiz.")
+        }
+      }
+      
       const generatedQuiz: Quiz = await res.json()
 
       setQuiz(generatedQuiz)

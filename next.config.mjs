@@ -9,6 +9,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  serverExternalPackages: ['@ai-sdk/google'],
 }
 
 export default nextConfig

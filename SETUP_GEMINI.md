@@ -54,10 +54,12 @@ Google AI has free tier limits:
 - **Daily requests**: Limited per day
 - **Per-minute requests**: Limited per minute
 - **Token limits**: Limited input tokens per minute
+- **File size**: PDFs should be under 5MB for best compatibility
 
 **If you hit limits:**
 1. Wait for the quota to reset (usually 24 hours for daily limits)
 2. Consider upgrading to a paid plan for higher limits
 3. The app now uses `gemini-1.5-flash` which has higher free limits
+4. For large PDFs: Try compressing them or splitting into smaller files
 
 Your app functionality remains exactly the same - it will still generate quizzes from PDFs and identify topics, just powered by Google's Gemini AI instead of OpenAI!

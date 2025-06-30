@@ -3,6 +3,7 @@ import { generateObject } from "ai"
 import { z } from "zod"
 
 export const maxDuration = 60 // Extend timeout for AI generation
+export const runtime = 'nodejs'
 
 export async function POST(req: Request) {
   try {
@@ -15,6 +16,27 @@ export async function POST(req: Request) {
         status: 400,
         headers: { "Content-Type": "application/json" },
       })
+
+    // Check file size (limit to 10MB)
+    const maxFileSize = 10 * 1024 * 1024; // 10MB in bytes
+    if (file.size > maxFileSize) {
+      return new Response(JSON.stringify({ 
+        error: "File too large. Please upload a PDF smaller than 10MB." 
+      }), {
+        status: 413,
+        headers: { "Content-Type": "application/json" },
+      })
+    }
+
+    // Check file type
+    if (file.type !== "application/pdf") {
+      return new Response(JSON.stringify({ 
+        error: "Invalid file type. Please upload a PDF file." 
+      }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      })
+    }
 
     // UPDATED: Define different prompts based on the selected style
     const strictPrompt =
