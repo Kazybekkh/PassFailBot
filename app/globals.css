@@ -75,38 +75,17 @@
 }
 
 @layer components {
-  .bot-face {
-    width: 100px;
-    height: 100px; /* Increased height to prevent cropping */
-    background-image: url("/bot-faces.png");
-    background-repeat: no-repeat;
-    margin: 1rem auto;
-    mix-blend-mode: screen;
-    transform: scale(0.7);
-    transform-origin: center;
+  .eye-container {
+    @apply flex justify-center items-center gap-4 h-24;
   }
-  .face-idle {
-    background-position: -20px -150px;
+  .eye {
+    @apply w-16 h-8 bg-cyan-400 rounded-full shadow-[0_0_15px_5px_rgba(0,255,255,0.5)];
+    transition: all 0.3s ease-in-out;
   }
-  .face-thinking {
-    background-position: -20px -70px;
+  .eye-win {
+    @apply h-10 rounded-t-full rounded-b-md;
   }
-  .face-wary {
-    background-position: -120px -150px;
-  }
-  .face-loading {
-    animation: blink 1s step-start infinite;
-  }
-  .face-win {
-    background-position: -120px -20px;
-  }
-  .face-lose {
-    background-position: -120px -80px;
-  }
-
-  @keyframes blink {
-    50% {
-      background-position: -20px -70px;
-    }
+  .eye-lose {
+    @apply h-4 bg-red-500 shadow-[0_0_15px_5px_rgba(255,0,0,0.5)];
   }
 }

@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
-import { BotFace, type BotReaction } from "@/components/bot-face"
+import { EveEyes, type EyeState } from "@/components/eve-eyes"
 
 type GameState = "config" | "loading" | "quiz" | "result" | "cheated"
 
@@ -25,7 +25,7 @@ type Quiz = {
 
 export default function PassFailBot() {
   const [gameState, setGameState] = useState<GameState>("config")
-  const [botReaction, setBotReaction] = useState<BotReaction>("idle")
+  const [eyeState, setEyeState] = useState<EyeState>("idle")
   const [pdfFile, setPdfFile] = useState<File | null>(null)
   const [targetScore, setTargetScore] = useState(50)
   const [betAmount, setBetAmount] = useState(100)
@@ -42,14 +42,14 @@ export default function PassFailBot() {
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const reactionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  const triggerReaction = useCallback((reaction: BotReaction, duration = 4000) => {
+  const triggerEyeState = useCallback((state: EyeState, duration = 1000) => {
     if (reactionTimeoutRef.current) {
       clearTimeout(reactionTimeoutRef.current)
     }
-    setBotReaction(reaction)
-    if (reaction !== "idle") {
+    setEyeState(state)
+    if (state === "focused") {
       reactionTimeoutRef.current = setTimeout(() => {
-        setBotReaction("idle")
+        setEyeState("idle")
       }, duration)
     }
   }, [])
@@ -105,6 +105,7 @@ export default function PassFailBot() {
     }
 
     setGameState("loading")
+    setEyeState("focused")
     setError(null)
     setCoins((prev) => prev - betAmount)
 
@@ -126,10 +127,12 @@ export default function PassFailBot() {
       setUserAnswers(new Array(generatedQuiz.questions.length).fill(null))
       setTimeLeft(duration * 60)
       setGameState("quiz")
+      setEyeState("focused")
     } catch (err) {
       setError((err as Error).message)
       setCoins((prev) => prev + betAmount) // Refund bet
       setGameState("config")
+      setEyeState("idle")
     }
   }
 
@@ -165,10 +168,10 @@ export default function PassFailBot() {
       const calculatedPayout = Math.floor(betAmount * (1 + targetScore / 100))
       setPayout(calculatedPayout)
       setCoins((prev) => prev + calculatedPayout)
-      triggerReaction("win", 5000)
+      setEyeState("win")
     } else {
       setPayout(0)
-      triggerReaction("lose", 5000)
+      setEyeState("lose")
     }
     setGameState("result")
   }
@@ -180,16 +183,16 @@ export default function PassFailBot() {
     setCurrentQuestionIndex(0)
     setUserAnswers([])
     setError(null)
-    triggerReaction("idle")
+    setEyeState("idle")
   }
 
   const renderContent = () => {
     switch (gameState) {
       case "loading":
         return (
-          <div className="text-center">
-            <BotFace reaction="loading" />
-            <p className="text-2xl animate-pulse">Generating your quiz...</p>
+          <div className="flex flex-col items-center text-center">
+            <EveEyes state="focused" />
+            <p className="text-2xl animate-pulse mt-4">Generating your quiz...</p>
             <p className="mt-4 text-sm text-muted-foreground">The AI is reading your PDF. This might take a moment.</p>
           </div>
         )
@@ -246,27 +249,29 @@ export default function PassFailBot() {
       case "result":
         const won = finalScore >= targetScore
         return (
-          <Card className="w-full max-w-md pixel-border text-center">
-            <CardHeader>
-              <BotFace reaction={won ? "win" : "lose"} />
-              <CardTitle className={cn("text-4xl", won ? "text-green-400" : "text-red-400")}>
-                {won ? "YOU PASSED!" : "YOU FAILED!"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-xl">Your Score: {finalScore}%</p>
-              <p className="text-lg text-muted-foreground">Target Score: {targetScore}%</p>
-              <hr className="border-dashed" />
-              <p className="text-xl">Bet: {betAmount} coins</p>
-              <p className={cn("text-xl", won ? "text-green-400" : "text-red-400")}>
-                {won ? `Payout: +${payout} coins` : `Lost: -${betAmount} coins`}
-              </p>
-              <p className="text-lg">New Balance: {coins} coins</p>
-              <Button onClick={handlePlayAgain} className="mt-4">
-                Play Again
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="flex flex-col items-center gap-4">
+            <EveEyes state={won ? "win" : "lose"} />
+            <Card className="w-full max-w-md pixel-border text-center">
+              <CardHeader>
+                <CardTitle className={cn("text-4xl", won ? "text-green-400" : "text-red-400")}>
+                  {won ? "YOU PASSED!" : "YOU FAILED!"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-xl">Your Score: {finalScore}%</p>
+                <p className="text-lg text-muted-foreground">Target Score: {targetScore}%</p>
+                <hr className="border-dashed" />
+                <p className="text-xl">Bet: {betAmount} coins</p>
+                <p className={cn("text-xl", won ? "text-green-400" : "text-red-400")}>
+                  {won ? `Payout: +${payout} coins` : `Lost: -${betAmount} coins`}
+                </p>
+                <p className="text-lg">New Balance: {coins} coins</p>
+                <Button onClick={handlePlayAgain} className="mt-4">
+                  Play Again
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         )
       case "cheated":
         return (
@@ -288,104 +293,104 @@ export default function PassFailBot() {
       case "config":
       default:
         return (
-          <Card className="w-full max-w-md pixel-border">
-            <CardHeader>
-              <CardTitle className="text-center text-3xl">PassFailBot</CardTitle>
-              <BotFace reaction={botReaction} />
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <label
-                  htmlFor="file-upload"
-                  className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-secondary"
-                >
-                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <Upload size={32} />
-                    <p className="mt-2 text-sm">{pdfFile ? pdfFile.name : "Upload Lecture PDF"}</p>
+          <div className="flex flex-col items-center gap-4">
+            <EveEyes state={eyeState} />
+            <Card className="w-full max-w-md pixel-border">
+              <CardHeader>
+                <CardTitle className="text-center text-3xl">PassFailBot</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6 pt-6">
+                <div>
+                  <label
+                    htmlFor="file-upload"
+                    className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-secondary"
+                  >
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <Upload size={32} />
+                      <p className="mt-2 text-sm">{pdfFile ? pdfFile.name : "Upload Lecture PDF"}</p>
+                    </div>
+                    <input
+                      id="file-upload"
+                      type="file"
+                      className="hidden"
+                      accept="application/pdf"
+                      onChange={handleFileChange}
+                    />
+                  </label>
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <label>
+                      <Target className="inline mr-2 text-[rgba(255,0,0,1)]" size={16} />
+                      Target Score
+                    </label>
+                    <span>{targetScore}%</span>
                   </div>
-                  <input
-                    id="file-upload"
-                    type="file"
-                    className="hidden"
-                    accept="application/pdf"
-                    onChange={handleFileChange}
+                  <Slider
+                    value={[targetScore]}
+                    onValueChange={([v]) => {
+                      triggerEyeState("focused")
+                      setTargetScore(v)
+                    }}
+                    step={10}
                   />
-                </label>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <label>
-                    <Target className="inline mr-2 text-[rgba(255,0,0,1)]" size={16} />
-                    Target Score
-                  </label>
-                  <span>{targetScore}%</span>
                 </div>
-                <Slider
-                  value={[targetScore]}
-                  onValueChange={([v]) => {
-                    if (v > targetScore) triggerReaction("thinking")
-                    else if (v < targetScore) triggerReaction("wary")
-                    setTargetScore(v)
-                  }}
-                  step={10}
-                />
-              </div>
 
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <label>
-                    <Coins className="inline mr-2 text-[rgba(255,224,0,1)]" size={16} />
-                    Bet Amount
-                  </label>
-                  <span>
-                    {betAmount} (Balance: {coins})
-                  </span>
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <label>
+                      <Coins className="inline mr-2 text-[rgba(255,224,0,1)]" size={16} />
+                      Bet Amount
+                    </label>
+                    <span>
+                      {betAmount} (Balance: {coins})
+                    </span>
+                  </div>
+                  <Slider
+                    value={[betAmount]}
+                    onValueChange={([v]) => {
+                      triggerEyeState("focused")
+                      setBetAmount(v)
+                    }}
+                    min={10}
+                    max={coins}
+                    step={10}
+                  />
                 </div>
-                <Slider
-                  value={[betAmount]}
-                  onValueChange={([v]) => {
-                    if (v > betAmount) triggerReaction("thinking")
-                    else if (v < betAmount) triggerReaction("wary")
-                    setBetAmount(v)
-                  }}
-                  min={10}
-                  max={coins}
-                  step={10}
-                />
-              </div>
 
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <label>
-                    <Clock className="inline mr-2 text-[rgba(105,228,104,1)]" size={16} />
-                    Duration
-                  </label>
-                  <span>{duration} min</span>
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <label>
+                      <Clock className="inline mr-2 text-[rgba(105,228,104,1)]" size={16} />
+                      Duration
+                    </label>
+                    <span>{duration} min</span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {[15, 30, 45, 60].map((d) => (
+                      <Button
+                        key={d}
+                        variant={duration === d ? "default" : "outline"}
+                        onClick={() => {
+                          triggerEyeState("focused")
+                          setDuration(d)
+                        }}
+                      >
+                        {d}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
-                <div className="grid grid-cols-4 gap-2">
-                  {[15, 30, 45, 60].map((d) => (
-                    <Button
-                      key={d}
-                      variant={duration === d ? "default" : "outline"}
-                      onClick={() => {
-                        triggerReaction("thinking")
-                        setDuration(d)
-                      }}
-                    >
-                      {d}
-                    </Button>
-                  ))}
-                </div>
-              </div>
 
-              {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+                {error && <p className="text-red-400 text-sm text-center">{error}</p>}
 
-              <Button className="w-full" onClick={handleStartQuiz} disabled={!pdfFile}>
-                Start Quiz
-              </Button>
-            </CardContent>
-          </Card>
+                <Button className="w-full" onClick={handleStartQuiz} disabled={!pdfFile}>
+                  Start Quiz
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         )
     }
   }

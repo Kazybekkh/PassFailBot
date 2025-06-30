@@ -1,20 +1,24 @@
+import type React from "react"
 import { cn } from "@/lib/utils"
 
 export type BotReaction = "idle" | "thinking" | "wary" | "loading" | "win" | "lose"
 
-type BotFaceProps = {
-  reaction: BotReaction
+interface BotFaceProps {
+  reaction?: BotReaction
 }
 
-export function BotFace({ reaction }: BotFaceProps) {
-  const reactionClass = {
-    idle: "face-idle",
-    thinking: "face-thinking",
-    wary: "face-wary",
-    loading: "face-loading",
-    win: "face-win",
-    lose: "face-lose",
-  }
-
-  return <div className={cn("bot-face", reactionClass[reaction])} />
+export const BotFace: React.FC<BotFaceProps> = ({ reaction = "idle" }) => {
+  return (
+    <div
+      className={cn(
+        "bot-face",
+        reaction === "idle" && "face-idle",
+        reaction === "thinking" && "face-thinking",
+        reaction === "wary" && "face-wary",
+        reaction === "loading" && "face-loading",
+        reaction === "win" && "face-win",
+        reaction === "lose" && "face-lose",
+      )}
+    />
+  )
 }
