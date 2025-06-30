@@ -1,5 +1,5 @@
 import { openai } from "@ai-sdk/openai"
-import { generateObject, APIError } from "ai"
+import { generateObject } from "ai"
 import { z } from "zod"
 
 export const maxDuration = 60 // Extend timeout for AI generation
@@ -60,44 +60,9 @@ export async function POST(req: Request) {
       headers: { "Content-Type": "application/json" },
     })
   } catch (error) {
-    console.error("Error generating quiz:", error)
-
-    let errorMessage = "Failed to generate quiz. An unknown error occurred."
-    let statusCode = 500
-
-    if (error instanceof APIError) {
-      switch (error.status) {
-        case 401:
-          errorMessage =
-            "Authentication Error: Invalid OpenAI API key or insufficient credits. Please check your API key and account balance."
-          statusCode = 401
-          break
-        case 429:
-          errorMessage =
-            "Rate Limit Exceeded: You have hit your request limit. Please check your OpenAI plan and billing details."
-          statusCode = 429
-          break
-        case 500:
-          errorMessage = "OpenAI Server Error: The AI provider is experiencing issues. Please try again later."
-          statusCode = 502 // Bad Gateway
-          break
-        default:
-          errorMessage = `API Error: ${error.message}`
-          statusCode = error.status || 500
-      }
-    } else if (error instanceof Error) {
-      // Handle potential timeouts or other Vercel function errors
-      if (error.message.includes("timed out")) {
-        errorMessage =
-          "Request Timed Out: The PDF is likely too large or complex to process in 60 seconds. Please try a smaller file."
-        statusCode = 504 // Gateway Timeout
-      } else {
-        errorMessage = error.message
-      }
-    }
-
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      status: statusCode,
+    console.error(error)
+    return new Response(JSON.stringify({ error: "Failed to generate quiz." }), {
+      status: 500,
       headers: { "Content-Type": "application/json" },
     })
   }

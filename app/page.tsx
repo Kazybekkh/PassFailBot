@@ -14,6 +14,7 @@ import {
   BookOpen,
   CheckCircle,
   XCircle,
+  Loader2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -22,7 +23,7 @@ import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
 import { useTypewriter } from "@/hooks/use-typewriter"
 
-type GameState = "config" | "loading" | "quiz" | "result" | "cheated" | "review" // UPDATED: Added 'review' state
+type GameState = "config" | "loading" | "quiz" | "result" | "cheated" | "review"
 type ConfigStep = "upload" | "style" | "target" | "bet" | "duration" | "confirm"
 type EyeState = "idle" | "focused" | "win" | "lose"
 type QuizStyle = "strict" | "similar"
@@ -148,6 +149,7 @@ export default function PassFailBot() {
   const [configStep, setConfigStep] = useState<ConfigStep>("upload")
   const [eyeState, setEyeState] = useState<EyeState>("idle")
   const [botMessage, setBotMessage] = useState(initialBotMessage)
+  const [isIdentifyingTopic, setIsIdentifyingTopic] = useState(false)
 
   const [pdfFile, setPdfFile] = useState<File | null>(null)
   const [quizStyle, setQuizStyle] = useState<QuizStyle | null>(null)
@@ -178,7 +180,7 @@ export default function PassFailBot() {
     }
   }, [])
 
-  /* ─────── anti-cheat: tab visibility change ─────── */
+  /* ───────────── anti-cheat: tab visibility change ─────── */
   const handleVisibilityChange = useCallback(() => {
     if (document.hidden && gameState === "quiz") {
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current)
@@ -209,16 +211,43 @@ export default function PassFailBot() {
   }, [gameState, timeLeft])
 
   /* ──────────────────── config helpers ─────────────────── */
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file && file.type === "application/pdf") {
-      setPdfFile(file)
-      setError(null)
-      setBotMessage(`Got it! "${file.name}" is locked and loaded.`)
-    } else {
+    if (!file || file.type !== "application/pdf") {
       setPdfFile(null)
       setError("Please upload a valid PDF file.")
       setBotMessage("Whoops, that doesn't look like a PDF. Please try again.")
+      return
+    }
+
+    setPdfFile(file)
+    setError(null)
+    setIsIdentifyingTopic(true)
+    setBotMessage("Let's see what we have here... Analyzing your document.")
+    triggerEyeState("focused")
+
+    const formData = new FormData()
+    formData.append("file", file)
+
+    try {
+      const res = await fetch("/api/identify-topic", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!res.ok) {
+        throw new Error("Could not identify the topic.")
+      }
+
+      const { topic } = await res.json()
+      // UPDATED: Combined the topic and file loaded messages into one clear sentence.
+      setBotMessage(`Okay, I've analyzed your PDF on '${topic}'. The file "${file.name}" is locked and loaded.`)
+    } catch (err) {
+      console.error(err)
+      setBotMessage(`Got it! Your file "${file.name}" is locked and loaded.`) // Fallback message
+    } finally {
+      setIsIdentifyingTopic(false)
+      setEyeState("idle")
     }
   }
 
@@ -338,13 +367,7 @@ export default function PassFailBot() {
         method: "POST",
         body: formData,
       })
-
-      // UPDATED: Check if the response is not OK and parse the specific error
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ error: "Failed to parse error response from server." }))
-        throw new Error(errorData.error || `Server responded with status: ${res.status}`)
-      }
-
+      if (!res.ok) throw new Error("Failed to generate quiz.")
       const generatedQuiz: Quiz = await res.json()
 
       setQuiz(generatedQuiz)
@@ -352,12 +375,10 @@ export default function PassFailBot() {
       setTimeLeft(duration * 60)
       setGameState("quiz")
     } catch (err: any) {
-      // The error message will now be the specific one from the server
-      setError(err.message ?? "An unexpected error occurred.")
-      setBotMessage("Oh no, something went wrong. Check the error message below.")
+      setError(err.message ?? "Unexpected error.")
       setCoins((prev) => prev + betAmount) // refund
       setGameState("config")
-      setEyeState("lose")
+      setEyeState("idle")
     }
   }
 
@@ -429,11 +450,16 @@ export default function PassFailBot() {
           {configStep === "upload" && (
             <label
               htmlFor="file-upload"
-              className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-secondary"
+              className={cn(
+                "flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-secondary",
+                isIdentifyingTopic && "cursor-not-allowed opacity-50",
+              )}
             >
               <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                <Upload size={32} />
-                <p className="mt-2 text-sm">{pdfFile ? pdfFile.name : "Upload Lecture PDF"}</p>
+                {isIdentifyingTopic ? <Loader2 className="animate-spin" size={32} /> : <Upload size={32} />}
+                <p className="mt-2 text-sm">
+                  {isIdentifyingTopic ? "Analyzing..." : pdfFile ? pdfFile.name : "Upload Lecture PDF"}
+                </p>
               </div>
               <input
                 id="file-upload"
@@ -441,6 +467,7 @@ export default function PassFailBot() {
                 className="hidden"
                 accept="application/pdf"
                 onChange={handleFileChange}
+                disabled={isIdentifyingTopic}
               />
             </label>
           )}
@@ -551,7 +578,10 @@ export default function PassFailBot() {
             {configStep !== "confirm" ? (
               <Button
                 onClick={handleNextStep}
-                disabled={(configStep === "upload" && !pdfFile) || (configStep === "style" && !quizStyle)}
+                disabled={
+                  (configStep === "upload" && (!pdfFile || isIdentifyingTopic)) ||
+                  (configStep === "style" && !quizStyle)
+                }
               >
                 Next <ArrowRight className="ml-2" size={16} />
               </Button>
@@ -590,17 +620,17 @@ export default function PassFailBot() {
             <CardContent className="p-6">
               <div className="border-b-2 pb-4 mb-4 text-sm flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  <Coins size={20} className="text-yellow-500" />
+                  <Coins size={24} className="text-yellow-500" />
                   <span>{coins}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Clock size={20} className="text-green-600" />
+                  <Clock size={24} className="text-green-600" />
                   <span>
                     {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, "0")}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Target size={20} className="text-destructive" />
+                  <Target size={24} className="text-destructive" />
                   <span>Target: {targetScore}%</span>
                 </div>
               </div>
@@ -664,7 +694,7 @@ export default function PassFailBot() {
           </div>
         )
 
-      case "review": // NEW: Review screen case
+      case "review":
         if (!quiz) return null
         return (
           <Card className="w-full max-w-4xl">
@@ -737,9 +767,9 @@ export default function PassFailBot() {
 
   return (
     <main className="flex flex-col lg:flex-row gap-8 min-h-screen items-center p-4 sm:p-8 bg-gray-50">
-      <div className="w-full lg:w-2/3 flex items-center justify-center">{renderContent()}</div>
-      <div className="hidden lg:flex w-full lg:w-1/3 justify-center">
-        <div className="w-full max-w-sm">
+      <div className="w-full lg:flex-1 flex items-center justify-center">{renderContent()}</div>
+      <div className="hidden lg:flex w-full lg:max-w-sm justify-center">
+        <div className="w-full">
           <StatsPanel coins={coins} lastBet={lastBet} />
         </div>
       </div>
