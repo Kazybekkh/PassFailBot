@@ -1,4 +1,4 @@
-import { createOpenAI } from "@ai-sdk/openai"
+import { openai } from "@ai-sdk/openai"
 import { generateObject, APIError } from "ai"
 import { z } from "zod"
 
@@ -10,14 +10,12 @@ const MAX_FILE_BYTES = 8_000_000
 export async function POST(req: Request) {
   try {
     // 1. Validate API Key
-    const OPENAI_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY
-    if (!OPENAI_KEY) {
+    if (!process.env.OPENAI_API_KEY && !process.env.NEXT_PUBLIC_OPENAI_API_KEY) {
       return jsonError(
-        "OpenAI API key is not configured. Please add NEXT_PUBLIC_OPENAI_API_KEY to your environment variables.",
+        "OpenAI API key is not configured. Please add OPENAI_API_KEY to your environment variables.",
         500,
       )
     }
-    const openai = createOpenAI({ apiKey: OPENAI_KEY })
 
     // 2. Validate Request Body
     const formData = await req.formData()
@@ -36,7 +34,7 @@ export async function POST(req: Request) {
     const promptText = quizStyle === "similar" ? similarPrompt : strictPrompt
 
     const { object: quiz } = await generateObject({
-      model: openai.responses("gpt-4o"),
+      model: openai("gpt-4o-mini"),
       schema: z.object({
         questions: z
           .array(

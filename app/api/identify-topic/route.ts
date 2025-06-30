@@ -1,4 +1,4 @@
-import { createOpenAI } from "@ai-sdk/openai"
+import { openai } from "@ai-sdk/openai"
 import { generateObject } from "ai"
 import { z } from "zod"
 
@@ -29,15 +29,14 @@ export async function POST(req: Request) {
   if (file.size > MAX_FILE_BYTES) return json({ error: "PDF larger than 8 MB – upload a smaller file." }, 413)
 
   /* 2. Ensure API key ------------------------------------------------------ */
-  const API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY
-  if (!API_KEY) return json({ error: "Missing NEXT_PUBLIC_OPENAI_API_KEY in environment variables." }, 500)
-
-  const openai = createOpenAI({ apiKey: API_KEY })
+  if (!process.env.OPENAI_API_KEY && !process.env.NEXT_PUBLIC_OPENAI_API_KEY) {
+    return json({ error: "Missing OpenAI API key in environment variables." }, 500)
+  }
 
   /* 3. Call the model ------------------------------------------------------ */
   try {
     const { object } = await generateObject({
-      model: openai.responses(MODEL_NAME),
+      model: openai(MODEL_NAME),
       schema: z.object({
         topic: z.string().describe("Main topic in 2-5 words, e.g. 'Organic Chemistry'."),
       }),
