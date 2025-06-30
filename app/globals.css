@@ -61,6 +61,10 @@
   }
   body {
     @apply bg-background text-foreground;
+    background-image: url("/ghibli-background.png");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
     image-rendering: pixelated;
     font-family: var(--font-press-start-2p), system-ui, sans-serif;
   }

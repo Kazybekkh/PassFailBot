@@ -190,21 +190,25 @@ export default function PassFailBot() {
     switch (gameState) {
       case "loading":
         return (
-          <div className="flex flex-col items-center text-center">
-            <EveEyes state="focused" />
-            <p className="text-2xl animate-pulse mt-4">Generating your quiz...</p>
-            <p className="mt-4 text-sm text-muted-foreground">The AI is reading your PDF. This might take a moment.</p>
-          </div>
+          <Card className="w-full max-w-md pixel-border bg-card/90 backdrop-blur-sm text-center p-8">
+            <div className="flex flex-col items-center">
+              <EveEyes state="focused" />
+              <p className="text-2xl animate-pulse mt-4">Generating your quiz...</p>
+              <p className="mt-4 text-sm text-muted-foreground">
+                The AI is reading your PDF. This might take a moment.
+              </p>
+            </div>
+          </Card>
         )
       case "quiz":
         if (!quiz) return null
         const question = quiz.questions[currentQuestionIndex]
         return (
-          <Card className="w-full max-w-4xl pixel-border bg-card">
+          <Card className="w-full max-w-4xl pixel-border bg-card/90 backdrop-blur-sm">
             <CardHeader className="border-b-4 border-double">
               <div className="flex justify-between items-center text-sm">
                 <div className="flex items-center gap-2">
-                  <Coins size={16} className="text-coin" />
+                  <Coins size={16} />
                   <span>{coins}</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -251,7 +255,7 @@ export default function PassFailBot() {
         return (
           <div className="flex flex-col items-center gap-4">
             <EveEyes state={won ? "win" : "lose"} />
-            <Card className="w-full max-w-md pixel-border text-center bg-card">
+            <Card className="w-full max-w-md pixel-border text-center bg-card/90 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className={cn("text-4xl", won ? "text-pass" : "text-fail")}>
                   {won ? "YOU PASSED!" : "YOU FAILED!"}
@@ -275,7 +279,7 @@ export default function PassFailBot() {
         )
       case "cheated":
         return (
-          <Card className="w-full max-w-md pixel-border text-center bg-destructive text-destructive-foreground">
+          <Card className="w-full max-w-md pixel-border text-center bg-destructive/90 backdrop-blur-sm text-destructive-foreground">
             <CardHeader>
               <CardTitle className="text-4xl">QUIZ FORFEITED</CardTitle>
             </CardHeader>
@@ -295,7 +299,7 @@ export default function PassFailBot() {
         return (
           <div className="flex flex-col items-center gap-4">
             <EveEyes state={eyeState} />
-            <Card className="w-full max-w-md pixel-border bg-card">
+            <Card className="w-full max-w-md pixel-border bg-card/90 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="text-center text-3xl">PassFailBot</CardTitle>
               </CardHeader>
@@ -395,9 +399,5 @@ export default function PassFailBot() {
     }
   }
 
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-background text-foreground">
-      {renderContent()}
-    </main>
-  )
+  return <main className="flex min-h-screen flex-col items-center justify-center p-8">{renderContent()}</main>
 }
