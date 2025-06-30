@@ -1,4 +1,4 @@
-import { openai } from "@ai-sdk/openai"
+import { createAnthropic } from "@ai-sdk/anthropic"
 import { generateObject, APIError } from "ai"
 import { z } from "zod"
 
@@ -10,12 +10,14 @@ const MAX_FILE_BYTES = 8_000_000
 export async function POST(req: Request) {
   try {
     // 1. Validate API Key
-    if (!process.env.OPENAI_API_KEY && !process.env.NEXT_PUBLIC_OPENAI_API_KEY) {
+    const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY
+    if (!ANTHROPIC_KEY) {
       return jsonError(
-        "OpenAI API key is not configured. Please add OPENAI_API_KEY to your environment variables.",
+        "Anthropic API key is not configured. Please add ANTHROPIC_API_KEY to your environment variables.",
         500,
       )
     }
+    const anthropic = createAnthropic({ apiKey: ANTHROPIC_KEY })
 
     // 2. Validate Request Body
     const formData = await req.formData()
@@ -34,7 +36,7 @@ export async function POST(req: Request) {
     const promptText = quizStyle === "similar" ? similarPrompt : strictPrompt
 
     const { object: quiz } = await generateObject({
-      model: openai("gpt-4o-mini"),
+      model: anthropic("claude-3-5-sonnet-20240620"),
       schema: z.object({
         questions: z
           .array(
