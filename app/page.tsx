@@ -339,7 +339,7 @@ export default function PassFailBot() {
         body: formData,
       })
 
-      // NEW: Check if the response is not OK and parse the specific error
+      // UPDATED: Check if the response is not OK and parse the specific error
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({ error: "Failed to parse error response from server." }))
         throw new Error(errorData.error || `Server responded with status: ${res.status}`)
@@ -354,9 +354,10 @@ export default function PassFailBot() {
     } catch (err: any) {
       // The error message will now be the specific one from the server
       setError(err.message ?? "An unexpected error occurred.")
+      setBotMessage("Oh no, something went wrong. Check the error message below.")
       setCoins((prev) => prev + betAmount) // refund
       setGameState("config")
-      setEyeState("idle")
+      setEyeState("lose")
     }
   }
 
@@ -735,10 +736,12 @@ export default function PassFailBot() {
   }
 
   return (
-    <main className="grid lg:grid-cols-3 gap-8 min-h-screen items-start lg:items-center p-4 sm:p-8 bg-gray-50">
-      <div className="lg:col-span-2 w-full flex items-center justify-center">{renderContent()}</div>
-      <div className="hidden lg:block w-full max-w-sm justify-self-center">
-        <StatsPanel coins={coins} lastBet={lastBet} />
+    <main className="flex flex-col lg:flex-row gap-8 min-h-screen items-center p-4 sm:p-8 bg-gray-50">
+      <div className="w-full lg:w-2/3 flex items-center justify-center">{renderContent()}</div>
+      <div className="hidden lg:flex w-full lg:w-1/3 justify-center">
+        <div className="w-full max-w-sm">
+          <StatsPanel coins={coins} lastBet={lastBet} />
+        </div>
       </div>
     </main>
   )

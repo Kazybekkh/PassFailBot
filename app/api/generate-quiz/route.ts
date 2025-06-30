@@ -8,7 +8,7 @@ export async function POST(req: Request) {
   try {
     const formData = await req.formData()
     const file = formData.get("file") as File
-    const quizStyle = formData.get("style") as "strict" | "similar"
+    const quizStyle = formData.get("style") as "strict" | "similar" // UPDATED: Get style from form data
 
     if (!file)
       return new Response(JSON.stringify({ error: "No file uploaded" }), {
@@ -16,6 +16,7 @@ export async function POST(req: Request) {
         headers: { "Content-Type": "application/json" },
       })
 
+    // UPDATED: Define different prompts based on the selected style
     const strictPrompt =
       "Based on this PDF, generate a challenging 10-question multiple-choice quiz. For each question give 4 options and specify the correct answer."
     const similarPrompt =
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
           content: [
             {
               type: "text",
-              text: promptText,
+              text: promptText, // UPDATED: Use the selected prompt
             },
             {
               type: "file",
@@ -85,7 +86,14 @@ export async function POST(req: Request) {
           statusCode = error.status || 500
       }
     } else if (error instanceof Error) {
-      errorMessage = error.message
+      // Handle potential timeouts or other Vercel function errors
+      if (error.message.includes("timed out")) {
+        errorMessage =
+          "Request Timed Out: The PDF is likely too large or complex to process in 60 seconds. Please try a smaller file."
+        statusCode = 504 // Gateway Timeout
+      } else {
+        errorMessage = error.message
+      }
     }
 
     return new Response(JSON.stringify({ error: errorMessage }), {
