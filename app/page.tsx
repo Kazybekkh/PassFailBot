@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useRef, useCallback, useEffect } from "react"
-import { Upload, Coins, Target, Clock, AlertTriangle, ArrowRight, ArrowLeft } from "lucide-react"
+import { Upload, Coins, Target, Clock, AlertTriangle, ArrowRight, ArrowLeft, Wand2, BookOpen } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
@@ -11,8 +11,9 @@ import { cn } from "@/lib/utils"
 import { useTypewriter } from "@/hooks/use-typewriter"
 
 type GameState = "config" | "loading" | "quiz" | "result" | "cheated"
-type ConfigStep = "upload" | "target" | "bet" | "duration" | "confirm"
+type ConfigStep = "upload" | "style" | "target" | "bet" | "duration" | "confirm" // UPDATED: Added 'style' step
 type EyeState = "idle" | "focused" | "win" | "lose"
+type QuizStyle = "strict" | "similar" // UPDATED: New type for quiz style
 
 type Question = {
   question: string
@@ -82,6 +83,7 @@ export default function PassFailBot() {
   const [botMessage, setBotMessage] = useState(initialBotMessage)
 
   const [pdfFile, setPdfFile] = useState<File | null>(null)
+  const [quizStyle, setQuizStyle] = useState<QuizStyle | null>(null) // UPDATED: State for quiz style
   const [targetScore, setTargetScore] = useState(50)
   const [betAmount, setBetAmount] = useState(100)
   const [duration, setDuration] = useState(15)
@@ -156,7 +158,12 @@ export default function PassFailBot() {
     triggerEyeState("focused")
     switch (configStep) {
       case "upload":
+        setConfigStep("style")
+        setBotMessage("Do you want questions strictly from the PDF, or new questions in a similar style?")
+        break
+      case "style":
         setConfigStep("target")
+        setBotMessage("Okay, what's your target score? Use the slider to set a goal.")
         break
       case "target":
         setConfigStep("bet")
@@ -173,8 +180,13 @@ export default function PassFailBot() {
   const handlePrevStep = () => {
     triggerEyeState("focused")
     switch (configStep) {
-      case "target":
+      case "style":
         setConfigStep("upload")
+        setBotMessage(initialBotMessage)
+        break
+      case "target":
+        setConfigStep("style")
+        setBotMessage("Do you want questions strictly from the PDF, or new questions in a similar style?")
         break
       case "bet":
         setConfigStep("target")
@@ -186,6 +198,18 @@ export default function PassFailBot() {
         setConfigStep("duration")
         break
     }
+  }
+
+  const handleStyleSelect = (style: QuizStyle) => {
+    setQuizStyle(style)
+    if (dialogueTimeoutRef.current) clearTimeout(dialogueTimeoutRef.current)
+    dialogueTimeoutRef.current = setTimeout(() => {
+      if (style === "strict") {
+        setBotMessage("Strictly from the PDF. A true test of memory. I like it.")
+      } else {
+        setBotMessage("Similar style questions... you want a real challenge! Excellent.")
+      }
+    }, 1500)
   }
 
   const handleTargetChange = (v: number) => {
@@ -223,8 +247,8 @@ export default function PassFailBot() {
 
   /* ────────────────── API / quiz start ─────────────────── */
   const handleStartQuiz = async () => {
-    if (!pdfFile) {
-      setError("Please select a PDF file first.")
+    if (!pdfFile || !quizStyle) {
+      setError("Please complete all configuration steps.")
       return
     }
     if (coins < betAmount) {
@@ -239,6 +263,7 @@ export default function PassFailBot() {
 
     const formData = new FormData()
     formData.append("file", pdfFile)
+    formData.append("style", quizStyle) // UPDATED: Pass style to API
 
     try {
       const res = await fetch("/api/generate-quiz", {
@@ -296,6 +321,7 @@ export default function PassFailBot() {
     setGameState("config")
     setConfigStep("upload")
     setPdfFile(null)
+    setQuizStyle(null) // UPDATED: Reset quiz style
     setQuiz(null)
     setUserAnswers([])
     setCurrentQuestionIndex(0)
@@ -330,6 +356,28 @@ export default function PassFailBot() {
                 onChange={handleFileChange}
               />
             </label>
+          )}
+
+          {/* STEP: style */}
+          {configStep === "style" && (
+            <div className="grid grid-cols-2 gap-4">
+              <Button
+                variant={quizStyle === "strict" ? "default" : "outline"}
+                onClick={() => handleStyleSelect("strict")}
+                className="h-auto flex-col py-4"
+              >
+                <BookOpen className="mb-2" />
+                Strictly from PDF
+              </Button>
+              <Button
+                variant={quizStyle === "similar" ? "default" : "outline"}
+                onClick={() => handleStyleSelect("similar")}
+                className="h-auto flex-col py-4"
+              >
+                <Wand2 className="mb-2" />
+                Similar Style
+              </Button>
+            </div>
           )}
 
           {/* STEP: target */}
@@ -393,6 +441,9 @@ export default function PassFailBot() {
                 <span>PDF:</span> <span>{pdfFile?.name}</span>
               </div>
               <div className="flex justify-between">
+                <span>Style:</span> <span className="capitalize">{quizStyle}</span>
+              </div>
+              <div className="flex justify-between">
                 <span>Target:</span> <span>{targetScore}%</span>
               </div>
               <div className="flex justify-between">
@@ -417,7 +468,10 @@ export default function PassFailBot() {
             )}
 
             {configStep !== "confirm" ? (
-              <Button onClick={handleNextStep} disabled={configStep === "upload" && !pdfFile}>
+              <Button
+                onClick={handleNextStep}
+                disabled={(configStep === "upload" && !pdfFile) || (configStep === "style" && !quizStyle)}
+              >
                 Next <ArrowRight className="ml-2" size={16} />
               </Button>
             ) : (
@@ -472,7 +526,6 @@ export default function PassFailBot() {
 
               <Progress value={((currentQuestionIndex + 1) / quiz.questions.length) * 100} className="mb-6" />
 
-              {/* UPDATED: Apply font-body to question */}
               <p className="text-lg mb-6 leading-relaxed font-body">{`Q${currentQuestionIndex + 1}: ${q.question}`}</p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -481,7 +534,6 @@ export default function PassFailBot() {
                     key={opt}
                     variant="outline"
                     className={cn(
-                      // UPDATED: Apply font-body to answers
                       "p-4 h-auto justify-start whitespace-normal font-body",
                       userAnswers[currentQuestionIndex] === opt && "bg-primary text-primary-foreground",
                     )}

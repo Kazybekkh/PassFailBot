@@ -6,9 +6,9 @@ export const maxDuration = 60 // Extend timeout for AI generation
 
 export async function POST(req: Request) {
   try {
-    // 1. Get the form data from the request, which includes the file.
     const formData = await req.formData()
     const file = formData.get("file") as File
+    const quizStyle = formData.get("style") as "strict" | "similar" // UPDATED: Get style from form data
 
     if (!file)
       return new Response(JSON.stringify({ error: "No file uploaded" }), {
@@ -16,11 +16,15 @@ export async function POST(req: Request) {
         headers: { "Content-Type": "application/json" },
       })
 
-    // 2. Use the AI SDK to generate a structured quiz object.
-    // We tell it which model to use (OpenAI's gpt-4o).
+    // UPDATED: Define different prompts based on the selected style
+    const strictPrompt =
+      "Based on this PDF, generate a challenging 10-question multiple-choice quiz. For each question give 4 options and specify the correct answer."
+    const similarPrompt =
+      "Analyze the style, format, and difficulty of the content in this PDF. Then, generate a new, challenging 10-question multiple-choice quiz that is *similar in style* to the content provided, but with different questions and values. The questions should not be directly from the PDF, but should test the same concepts at a similar level. For each question give 4 options and specify the correct answer."
+    const promptText = quizStyle === "similar" ? similarPrompt : strictPrompt
+
     const { object: quiz } = await generateObject({
       model: openai("gpt-4o"),
-      // We define the exact structure we want the quiz in.
       schema: z.object({
         questions: z
           .array(
@@ -32,20 +36,17 @@ export async function POST(req: Request) {
           )
           .describe("An array of 10 multiple-choice questions."),
       }),
-      // 3. This is the core of the request. We send two things to the AI:
-      //    - A text prompt telling it what to do.
-      //    - The PDF file itself for the AI to read and analyze.
       messages: [
         {
           role: "user",
           content: [
             {
               type: "text",
-              text: "Based on this PDF, generate a challenging 10-question multiple-choice quiz. For each question give 4 options and specify the correct answer.",
+              text: promptText, // UPDATED: Use the selected prompt
             },
             {
               type: "file",
-              data: await file.arrayBuffer(), // The actual content of your uploaded PDF.
+              data: await file.arrayBuffer(),
               mimeType: "application/pdf",
               filename: file.name,
             },
@@ -54,7 +55,6 @@ export async function POST(req: Request) {
       ],
     })
 
-    // 4. Return the generated quiz to the frontend.
     return new Response(JSON.stringify(quiz), {
       status: 200,
       headers: { "Content-Type": "application/json" },
