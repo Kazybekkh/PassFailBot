@@ -1,4 +1,4 @@
-import { generateText } from "ai"
+import { streamText } from "ai" // Changed from generateText
 import { createAnthropic } from "@ai-sdk/anthropic"
 import { openai } from "@ai-sdk/openai"
 import { z } from "zod"
@@ -115,11 +115,15 @@ export async function POST(req: Request) {
       ]
     }
 
-    /* 4. Call the model --------------------------------------------------- */
-    const { text } = await generateText({ model, messages })
+    /* 4. Call the model using streamText ---------------------------------- */
+    const { textStream } = await streamText({ model, messages })
+    let fullText = ""
+    for await (const delta of textStream) {
+      fullText += delta
+    }
 
     /* 5. Tolerant JSON parsing & validation ------------------------------- */
-    const raw = text.trim()
+    const raw = fullText.trim()
     const parsed = extractJson(raw)
     const quiz = QUIZ_SCHEMA.safeParse(parsed)
 

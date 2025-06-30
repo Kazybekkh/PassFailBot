@@ -49,16 +49,22 @@ export async function POST(req: Request) {
       const anthropic = createAnthropic({ apiKey: anthropicKey })
       const { text } = await generateText({
         model: anthropic("claude-3-5-sonnet-20240620"),
-        prompt: [
+        // Switched from `prompt` to `messages` for multimodal input
+        messages: [
           {
-            type: "text",
-            text: "Respond with ONLY the main topic of this PDF in 2-5 words (no punctuation).",
-          },
-          {
-            type: "file",
-            data: await file.arrayBuffer(),
-            mimeType: "application/pdf",
-            filename: file.name,
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: "Respond with ONLY the main topic of this PDF in 2-5 words (no punctuation).",
+              },
+              {
+                type: "file",
+                data: await file.arrayBuffer(),
+                mimeType: "application/pdf",
+                filename: file.name,
+              },
+            ],
           },
         ],
       })
