@@ -17,11 +17,11 @@ export async function POST(req: Request) {
       })
     }
 
-    // Check file size (limit to 10MB)
-    const maxFileSize = 10 * 1024 * 1024; // 10MB in bytes
+    // Check file size (limit to 5MB for better API compatibility)
+    const maxFileSize = 5 * 1024 * 1024; // 5MB in bytes
     if (file.size > maxFileSize) {
       return new Response(JSON.stringify({ 
-        error: "File too large. Please upload a PDF smaller than 10MB." 
+        error: "File too large. Please upload a PDF smaller than 5MB." 
       }), {
         status: 413,
         headers: { "Content-Type": "application/json" },
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
           content: [
             {
               type: "text",
-              text: "Briefly identify the main topic or subject of this document in 2-5 words. For example: 'Linear Algebra', 'World War II History', 'Quantum Mechanics'.",
+              text: "Identify the main topic of this document in 2-4 words (e.g., 'Linear Algebra', 'World History', 'Chemistry').",
             },
             {
               type: "file",

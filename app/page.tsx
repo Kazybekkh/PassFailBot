@@ -239,10 +239,16 @@ export default function PassFailBot() {
     formData.append("file", file)
 
     try {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 60000) // 1 minute timeout for topic identification
+      
       const res = await fetch("/api/identify-topic", {
         method: "POST",
         body: formData,
+        signal: controller.signal,
       })
+
+      clearTimeout(timeoutId)
 
       if (!res.ok) {
         if (res.status === 413) {
@@ -250,6 +256,9 @@ export default function PassFailBot() {
         }
         if (res.status === 429) {
           throw new Error("API quota exceeded. Please try again later.")
+        }
+        if (res.status === 504) {
+          throw new Error("Request timed out. Please try with a smaller PDF.")
         }
         throw new Error("Could not identify the topic.")
       }
@@ -259,7 +268,16 @@ export default function PassFailBot() {
       setBotMessage(`Okay, I've analyzed your PDF on '${topic}'. The file "${file.name}" is locked and loaded.`)
     } catch (err) {
       console.error(err)
-      const errorMessage = err instanceof Error ? err.message : "Could not identify the topic."
+      let errorMessage = "Could not identify the topic."
+      
+      if (err instanceof Error) {
+        if (err.name === 'AbortError') {
+          errorMessage = "Request timed out. Please try with a smaller PDF."
+        } else {
+          errorMessage = err.message
+        }
+      }
+      
       setBotMessage(`Hmm, there was an issue: ${errorMessage} Let's try continuing anyway with your file "${file.name}".`)
     } finally {
       setIsIdentifyingTopic(false)
@@ -379,16 +397,26 @@ export default function PassFailBot() {
     formData.append("style", quizStyle)
 
     try {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 120000) // 2 minute timeout
+      
       const res = await fetch("/api/generate-quiz", {
         method: "POST",
         body: formData,
+        signal: controller.signal,
       })
+      
+      clearTimeout(timeoutId)
       
       if (!res.ok) {
         if (res.status === 413) {
           throw new Error("PDF file too large. Please upload a smaller file (under 5MB).")
         } else if (res.status === 429) {
           throw new Error("API quota exceeded. Please try again later.")
+        } else if (res.status === 504) {
+          throw new Error("Request timed out. Please try with a smaller or simpler PDF.")
+        } else if (res.status === 504) {
+          throw new Error("Request timed out. Please try with a smaller or simpler PDF.")
         } else {
           const errorData = await res.json().catch(() => ({}))
           throw new Error(errorData.error || "Failed to generate quiz.")
@@ -402,7 +430,12 @@ export default function PassFailBot() {
       setTimeLeft(duration * 60)
       setGameState("quiz")
     } catch (err: any) {
-      setError(err.message ?? "Unexpected error.")
+      // Handle timeout/abort errors specifically
+      if (err.name === 'AbortError') {
+        setError("Request timed out. Please try with a smaller or simpler PDF.")
+      } else {
+        setError(err.message ?? "Unexpected error.")
+      }
       setCoins((prev) => prev + betAmount) // refund
       setGameState("config")
       setEyeState("idle")

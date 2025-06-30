@@ -5,10 +5,20 @@
 ### 🔴 Error: 413 Payload Too Large
 **Problem**: PDF file is too large for processing
 **Solutions**:
+- ✅ **Fixed**: Backend and frontend now both limit to 5MB
 - Use PDFs smaller than 5MB
 - Compress your PDF using online tools
 - Split large PDFs into smaller sections
 - Remove images/graphics from PDF if possible
+
+### 🔴 Error: 504 Gateway Timeout
+**Problem**: Request takes too long to process
+**Solutions**:
+- ✅ **Fixed**: Added timeout handling with better error messages
+- Use simpler, text-heavy PDFs (avoid complex graphics)
+- Try PDFs with fewer pages (1-10 pages ideal)
+- Ensure stable internet connection
+- Wait and try again (server might be busy)
 
 ### 🔴 Error: 429 Too Many Requests  
 **Problem**: Hit Google AI API quota limits
