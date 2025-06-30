@@ -14,6 +14,19 @@ https://github.com/user-attachments/assets/78796b97-3592-4668-8514-a189880c2500
 
 🔗 **Repository:** [https://github.com/Kazybekkh/PassFailBot.git](https://github.com/Kazybekkh/PassFailBot.git)
 
+## GAME RULES:
+
+
+
+If your result is exactly or higher than the percentage/time period you bet for, you win!
+If you switch tabs to cheat? Ya lose!
+The win depends on the result you bet for, if you bet that you'll get 70% or higher, your bet will return multiplied by 1.7x times!
+If your performance is below the target, you lose entire bet, that's what risks are for!
+
+
+Isn't it fun?
+
+
 ## Tech Stack
 
 **Core Framework & Runtime:**
