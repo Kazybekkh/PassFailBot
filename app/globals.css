@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ---------- Base theme ---------- */
 @layer base {
   :root {
     /* Default Theme */
@@ -36,50 +35,48 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-press-start-2p), system-ui, sans-serif;
   }
 }
 
-/* ---------- Components ---------- */
 @layer components {
+  /* Robot Face Components */
   .eye-container {
-    @apply relative w-48 h-48 flex justify-center items-center gap-4;
+    @apply relative flex h-48 w-48 items-center justify-center gap-4;
   }
 
   .eye {
-    @apply w-8 h-8;
-    background-color: hsl(var(--foreground));
-    transition: all 0.3s ease-in-out;
+    @apply h-8 w-8 bg-[hsl(var(--foreground))] transition-all duration-300 ease-in-out;
   }
+
   .eye-win {
-    @apply h-6  bg-[hsl(var(--pass))];
+    @apply h-6 bg-[hsl(var(--pass))];
   }
+
   .eye-lose {
     @apply h-10 w-6 bg-[hsl(var(--fail))];
   }
 
   .mouth {
-    @apply absolute w-16 h-6 bg-primary opacity-0 transition-opacity duration-300;
-    bottom: 28%;
+    @apply absolute bottom-[28%] h-6 w-16 bg-primary opacity-0 transition-opacity duration-300;
     -webkit-mask-image: radial-gradient(circle at 50% 0, transparent 20px, black 21px);
     mask-image: radial-gradient(circle at 50% 0, transparent 20px, black 21px);
   }
+
   .mouth-win {
     @apply opacity-100;
   }
 
-  /* --- FIXED: correct whitespace between utilities --- */
+  /* Dialogue Box Components */
   .dialogue-box {
-    @apply relative w-full min-h-[8rem] mb-6
-           p-4 border-2 border-border bg-card text-card-foreground
-           text-lg leading-relaxed font-normal
-           flex items-center justify-center text-center rounded-lg;
+    @apply relative mb-6 flex w-full min-h-[8rem] items-center justify-center rounded-lg border-2 border-border bg-card p-4 text-center text-lg font-normal leading-relaxed text-card-foreground;
   }
 
   .dialogue-caret {
-    @apply absolute w-0 h-0 border-8 border-transparent border-t-border;
+    @apply absolute h-0 w-0 border-8 border-t-border border-transparent;
     bottom: -16px;
     left: 50%;
     transform: translateX(-50%);
