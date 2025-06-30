@@ -236,22 +236,24 @@ export default function PassFailBot() {
       })
 
       if (!res.ok) {
-        // surface detailed error from server
-        let errorMsg = `Server responded with ${res.status}`
+        let msg = `Server responded with ${res.status}`
         try {
           const data = await res.json()
-          if (data?.error) errorMsg = data.error
+          if (data?.error) msg = data.error
         } catch {
           const txt = await res.text().catch(() => "")
-          if (txt) errorMsg = txt
+          if (txt) msg = txt
         }
-        throw new Error(errorMsg)
+        throw new Error(msg)
       }
 
       const { topic } = await res.json()
       // UPDATED: Combined the topic and file loaded messages into one clear sentence.
       setBotMessage(`Okay, I've analyzed your PDF on '${topic}'. The file "${file.name}" is locked and loaded.`)
-    } catch (err) {
+    } catch (err: any) {
+      const message = err?.message ?? "Unexpected error."
+      setError(message)
+      setBotMessage(`🚨 ${message}`)
       console.error(err)
       setBotMessage(`Got it! Your file "${file.name}" is locked and loaded.`) // Fallback message
     } finally {
@@ -379,15 +381,15 @@ export default function PassFailBot() {
 
       if (!res.ok) {
         // Read JSON first, then fall back to raw text so we always get something meaningful
-        let errorMsg = `Server responded with ${res.status}`
+        let msg = `Server responded with ${res.status}`
         try {
           const data = await res.json()
-          if (data?.error) errorMsg = data.error
+          if (data?.error) msg = data.error
         } catch {
           const txt = await res.text().catch(() => "")
-          if (txt) errorMsg = txt
+          if (txt) msg = txt
         }
-        throw new Error(errorMsg)
+        throw new Error(msg)
       }
 
       const generatedQuiz: Quiz = await res.json()
