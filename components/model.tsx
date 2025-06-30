@@ -8,7 +8,7 @@ import type { EyeState } from "./robot-scene"
 
 export function Model({ eyeState }: { eyeState: EyeState }) {
   const group = useRef<THREE.Group>(null)
-  const { nodes, materials, animations } = useGLTF("/robot-head.glb")
+  const { nodes, materials, animations } = useGLTF("/models/robot-head.glb")
   const { actions } = useAnimations(animations, group)
 
   const eyeMaterial = materials["Eye Emission"] as THREE.MeshStandardMaterial
@@ -66,4 +66,4 @@ export function Model({ eyeState }: { eyeState: EyeState }) {
   )
 }
 
-useGLTF.preload("/robot-head.glb")
+useGLTF.preload("/models/robot-head.glb")
