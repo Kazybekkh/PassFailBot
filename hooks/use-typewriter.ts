@@ -6,20 +6,26 @@ export const useTypewriter = (text: string, speed = 30) => {
   const [displayedText, setDisplayedText] = useState("")
 
   useEffect(() => {
-    setDisplayedText("") // Start with a clean slate when text prop changes
-    if (text) {
-      let i = 0
-      const intervalId = setInterval(() => {
-        if (i < text.length) {
-          setDisplayedText((prev) => prev + text.charAt(i)) // This is the problem!
-          i++
-        } else {
-          clearInterval(intervalId)
-        }
-      }, speed)
-
-      return () => clearInterval(intervalId)
+    if (!text) {
+      setDisplayedText("")
+      return
     }
+
+    let i = 0
+    const intervalId = setInterval(() => {
+      // Set the state to a slice of the full string.
+      // This is more robust than appending characters to a previous state.
+      setDisplayedText(text.slice(0, i + 1))
+      i++
+
+      if (i > text.length) {
+        clearInterval(intervalId)
+      }
+    }, speed)
+
+    // Cleanup function to clear the interval when the component unmounts
+    // or when the `text` prop changes, preventing memory leaks and bugs.
+    return () => clearInterval(intervalId)
   }, [text, speed])
 
   return displayedText
