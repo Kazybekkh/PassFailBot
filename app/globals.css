@@ -86,29 +86,22 @@
 }
 
 @layer components {
-  .robot-head-container {
-    @apply relative w-48 h-48 bg-contain bg-no-repeat bg-center;
-    background-image: url("/robot-head.png");
-  }
-
   .eye-container {
-    @apply absolute inset-0 flex justify-center items-center gap-3;
-    /* Nudge the eyes down slightly to fit the visor */
-    padding-top: 1.25rem;
+    @apply w-48 h-48 flex justify-center items-center gap-4;
   }
   .eye {
-    @apply w-8 h-8 rounded-lg; /* Make eyes smaller to fit the head */
+    @apply w-12 h-12 rounded-lg;
     background-image: radial-gradient(circle at center, #ffffff 20%, #89f7fe 70%, #66a6ff 100%);
     box-shadow: 0 0 10px 3px rgba(79, 172, 254, 0.6);
     transition: all 0.3s ease-in-out;
   }
   .eye-win {
-    @apply h-9; /* Taller for "happy" expression */
+    @apply h-14; /* Taller for "happy" expression */
     background-image: radial-gradient(circle at center, #ffffff 20%, #a5d6a7 70%, #4caf50 100%);
     box-shadow: 0 0 10px 3px rgba(76, 175, 80, 0.6);
   }
   .eye-lose {
-    @apply h-6; /* Shorter for "sad" expression */
+    @apply h-10; /* Shorter for "sad" expression */
     background-image: radial-gradient(circle at center, #ffffff 20%, #ef9a9a 70%, #ff5252 100%);
     box-shadow: 0 0 10px 3px rgba(255, 82, 82, 0.6);
   }
