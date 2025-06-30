@@ -224,7 +224,7 @@ export default function PassFailBot() {
     setPdfFile(file)
     setError(null)
     setIsIdentifyingTopic(true)
-    setBotMessage("Let's see what we have here... Analyzing your document.")
+    setBotMessage("Let's see what we have here... Looking at the filename.")
     triggerEyeState("focused")
 
     const formData = new FormData()
@@ -258,13 +258,17 @@ export default function PassFailBot() {
       }
 
       const { topic } = await res.json()
-      setBotMessage(`Okay, I've analyzed your PDF on '${topic}'. The file "${file.name}" is locked and loaded.`)
+      setBotMessage(
+        `Okay, based on the name "${file.name}", I think the topic is '${topic}'. The file is locked and loaded.`,
+      )
     } catch (err: any) {
       const message = err?.message ?? "Unexpected error."
       setError(message)
       setBotMessage(`🚨 ${message}`)
       console.error(err)
-      setBotMessage(`Got it! Your file "${file.name}" is locked and loaded.`) // Fallback message
+      setBotMessage(
+        `Got it! Your file "${file.name}" is locked and loaded. I'll generate questions based on the title.`,
+      ) // Fallback message
     } finally {
       setIsIdentifyingTopic(false)
       setEyeState("idle")

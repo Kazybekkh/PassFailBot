@@ -1,6 +1,5 @@
-import { generateText, streamText } from "ai"
-import { createAnthropic } from "@ai-sdk/anthropic"
-import { openai } from "@ai-sdk/openai"
+import { generateText } from "ai"
+import { createGroq } from "@ai-sdk/groq"
 
 /* -------------------------------------------------------------------------- */
 /*  HELPERS                                                                   */
@@ -37,51 +36,21 @@ export async function POST(req: Request) {
     if (!file) return json({ error: "No file uploaded." }, 400)
     if (file.size > MAX_FILE_BYTES) return json({ error: "PDF larger than 8 MB." }, 413)
 
-    /* 2. Select provider --------------------------------------------------- */
-    const anthropicKey = process.env.ANTHROPIC_API_KEY
-    const openaiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY
-
-    if (!anthropicKey && !openaiKey) return json({ error: "No AI provider API key found." }, 500)
-
-    let topicText: string
-
-    if (anthropicKey) {
-      const anthropic = createAnthropic({ apiKey: anthropicKey })
-
-      const { textStream } = await streamText({
-        model: anthropic("claude-3-5-sonnet-20240620"),
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: "Respond with ONLY the main topic of this PDF in 2-5 words (no punctuation).",
-              },
-              {
-                type: "file",
-                data: await file.arrayBuffer(),
-                mimeType: "application/pdf",
-                filename: file.name,
-              },
-            ],
-          },
-        ],
-      })
-
-      let full = ""
-      for await (const delta of textStream) full += delta
-      topicText = full
-    } else {
-      // OpenAI fallback (no PDF context—use filename hint)
-      const { text } = await generateText({
-        model: openai("gpt-4o", { apiKey: openaiKey! }),
-        prompt: `A file is named "${file.name}". In 2-5 words and without punctuation, what is its likely topic?`,
-      })
-      topicText = text
+    /* 2. Check for Groq API Key ------------------------------------------ */
+    if (!process.env.GROQ_API_KEY) {
+      return json({ error: "Groq API key not configured." }, 500)
     }
 
-    return json({ topic: cleanTopic(topicText) })
+    /* 3. Call Groq to identify topic from filename ----------------------- */
+    const groq = createGroq({ apiKey: process.env.GROQ_API_KEY })
+    const model = groq("llama3-8b-8192") // 8b is fast and sufficient for this
+
+    const { text } = await generateText({
+      model,
+      prompt: `A file is named "${file.name}". In 2-5 words and without punctuation, what is its likely topic? Respond with ONLY the topic.`,
+    })
+
+    return json({ topic: cleanTopic(text) })
   } catch (err) {
     console.error("identify-topic error:", err)
     // Soft-fallback so the client can continue
