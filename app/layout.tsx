@@ -1,12 +1,18 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Press_Start_2P } from "next/font/google"
+import { Press_Start_2P, Inter } from "next/font/google" // UPDATED: Import Inter
 import "./globals.css"
 
 const pressStart2P = Press_Start_2P({
   subsets: ["latin"],
   weight: "400",
   variable: "--font-press-start-2p",
+})
+
+// UPDATED: Setup Inter font
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
 })
 
 export const metadata: Metadata = {
@@ -22,7 +28,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${pressStart2P.variable} font-sans`}>{children}</body>
+      {/* UPDATED: Add Inter font variable to the body */}
+      <body className={`${pressStart2P.variable} ${inter.variable} font-sans`}>{children}</body>
     </html>
   )
 }

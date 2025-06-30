@@ -97,7 +97,7 @@ export default function PassFailBot() {
 
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const reactionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const dialogueTimeoutRef = useRef<NodeJS.Timeout | null>(null) // UPDATED: Ref for dialogue timeout
+  const dialogueTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   /* ────────────────── eye reactions helper ─────────────── */
   const triggerEyeState = useCallback((state: EyeState, durationMs = 800) => {
@@ -121,7 +121,7 @@ export default function PassFailBot() {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange)
       if (reactionTimeoutRef.current) clearTimeout(reactionTimeoutRef.current)
-      if (dialogueTimeoutRef.current) clearTimeout(dialogueTimeoutRef.current) // UPDATED: Cleanup dialogue timeout
+      if (dialogueTimeoutRef.current) clearTimeout(dialogueTimeoutRef.current)
     }
   }, [handleVisibilityChange])
 
@@ -188,7 +188,6 @@ export default function PassFailBot() {
     }
   }
 
-  // UPDATED: All change handlers now use a 1.5s delay
   const handleTargetChange = (v: number) => {
     setTargetScore(v)
     if (dialogueTimeoutRef.current) clearTimeout(dialogueTimeoutRef.current)
@@ -473,7 +472,8 @@ export default function PassFailBot() {
 
               <Progress value={((currentQuestionIndex + 1) / quiz.questions.length) * 100} className="mb-6" />
 
-              <p className="text-lg mb-6 leading-relaxed">{`Q${currentQuestionIndex + 1}: ${q.question}`}</p>
+              {/* UPDATED: Apply font-body to question */}
+              <p className="text-lg mb-6 leading-relaxed font-body">{`Q${currentQuestionIndex + 1}: ${q.question}`}</p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {q.options.map((opt) => (
@@ -481,7 +481,8 @@ export default function PassFailBot() {
                     key={opt}
                     variant="outline"
                     className={cn(
-                      "p-4 h-auto justify-start whitespace-normal",
+                      // UPDATED: Apply font-body to answers
+                      "p-4 h-auto justify-start whitespace-normal font-body",
                       userAnswers[currentQuestionIndex] === opt && "bg-primary text-primary-foreground",
                     )}
                     onClick={() => handleAnswerSelect(opt)}
