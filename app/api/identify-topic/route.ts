@@ -7,7 +7,7 @@ import { z } from "zod"
 /* -------------------------------------------------------------------------- */
 
 const MAX_FILE_BYTES = 8_000_000 // 8 MB – OpenAI’s file limit
-const MODEL_NAME = "gpt-4o-mini" // quick + economical
+const MODEL_NAME = "claude-3-sonnet-20240229" // supports PDF input
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
   /* 3. Call the model ------------------------------------------------------ */
   try {
     const { object } = await generateObject({
-      model: anthropic("claude-3-haiku-20240307"),
+      model: anthropic(MODEL_NAME),
       schema: z.object({
         topic: z.string().describe("Main topic in 2-5 words, e.g. 'Organic Chemistry'."),
       }),
