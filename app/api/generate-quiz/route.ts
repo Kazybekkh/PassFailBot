@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     const promptText = quizStyle === "similar" ? similarPrompt : strictPrompt
 
     const { object: quiz } = await generateObject({
-      model: openai("gpt-4o"),
+      model: openai.responses("gpt-4o"),
       schema: z.object({
         questions: z
           .array(

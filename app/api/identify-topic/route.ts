@@ -37,7 +37,7 @@ export async function POST(req: Request) {
   /* 3. Call the model ------------------------------------------------------ */
   try {
     const { object } = await generateObject({
-      model: openai(MODEL_NAME),
+      model: openai.responses(MODEL_NAME),
       schema: z.object({
         topic: z.string().describe("Main topic in 2-5 words, e.g. 'Organic Chemistry'."),
       }),
