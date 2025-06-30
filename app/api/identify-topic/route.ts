@@ -1,4 +1,4 @@
-import { generateText } from "ai"
+import { generateText, streamText } from "ai"
 import { createAnthropic } from "@ai-sdk/anthropic"
 import { openai } from "@ai-sdk/openai"
 
@@ -47,9 +47,9 @@ export async function POST(req: Request) {
 
     if (anthropicKey) {
       const anthropic = createAnthropic({ apiKey: anthropicKey })
-      const { text } = await generateText({
+
+      const { textStream } = await streamText({
         model: anthropic("claude-3-5-sonnet-20240620"),
-        // Switched from `prompt` to `messages` for multimodal input
         messages: [
           {
             role: "user",
@@ -68,7 +68,10 @@ export async function POST(req: Request) {
           },
         ],
       })
-      topicText = text
+
+      let full = ""
+      for await (const delta of textStream) full += delta
+      topicText = full
     } else {
       // OpenAI fallback (no PDF context—use filename hint)
       const { text } = await generateText({
