@@ -246,8 +246,16 @@ export default function PassFailBot() {
       })
 
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ error: "Failed to parse error from server." }))
-        throw new Error(errorData.error || `Server responded with status: ${res.status}`)
+        // Attempt to read JSON first, then fall back to raw text
+        let errorMsg = `Server responded with status ${res.status}`
+        try {
+          const data = await res.json()
+          if (data?.error) errorMsg = data.error
+        } catch {
+          const txt = await res.text().catch(() => "")
+          if (txt) errorMsg = txt
+        }
+        throw new Error(errorMsg)
       }
 
       const { topic } = await res.json()
@@ -380,8 +388,15 @@ export default function PassFailBot() {
       })
 
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ error: "Failed to parse error response." }))
-        throw new Error(errorData.error || `Server responded with status: ${res.status}`)
+        let errorMsg = `Server responded with status ${res.status}`
+        try {
+          const data = await res.json()
+          if (data?.error) errorMsg = data.error
+        } catch {
+          const txt = await res.text().catch(() => "")
+          if (txt) errorMsg = txt
+        }
+        throw new Error(errorMsg)
       }
 
       const generatedQuiz: Quiz = await res.json()
