@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useRef, useCallback, useEffect } from "react"
+import { useState, useRef, useCallback } from "react"
 import { Upload, Coins, Target, Clock, AlertTriangle, ArrowRight, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -14,19 +14,28 @@ import { DialogueBox } from "@/components/dialogue-box"
 type GameState = "config" | "loading" | "quiz" | "result" | "cheated"
 type ConfigStep = "upload" | "target" | "bet" | "duration" | "confirm"
 
-type Question = {
+type Question =
+\
+{
   question: string
   options: string[]
   answer: string
+  \
 }
 
-type Quiz = {
-  questions: Question[]
+type Quiz =
+\
+{
+  \
+  questions: Question[]\
+\
 }
 
 const initialBotMessage = "Hello! First, upload the PDF you want to be quizzed on."
 
-export default function PassFailBot() {
+export default function PassFailBot()
+\
+{
   /* ──────────────────────── state ──────────────────────── */
   const [gameState, setGameState] = useState<GameState>("config")
   const [configStep, setConfigStep] = useState<ConfigStep>("upload")
@@ -51,68 +60,87 @@ export default function PassFailBot() {
   const reactionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   /* ────────────────── eye reactions helper ─────────────── */
-  const triggerEyeState = useCallback((state: EyeState, durationMs = 800) => {
+  const triggerEyeState = useCallback((state: EyeState, durationMs = 800) => \{
     if (reactionTimeoutRef.current) clearTimeout(reactionTimeoutRef.current)
     setEyeState(state)
-    if (state === "focused") {
-      reactionTimeoutRef.current = setTimeout(() => setEyeState("idle"), durationMs)
-    }
-  }, [])
-
-  /* ───────────── anti-cheat: tab visibility change ─────── */
-  const handleVisibilityChange = useCallback(() => {
-    if (document.hidden && gameState === "quiz") {
+    if (state === "focused") \{\
+      reactionTimeoutRef.current = setTimeout(() => setEyeState(\"idle"), durationMs)
+    \}\
+  \}, [])
+  \
+  /* ───────────── anti-cheat: tab visibility change ─────── */\
+  const handleVisibilityChange = useCallback(() => \{\
+    if (document.hidden && gameState === "quiz") \{
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current)
       setGameState("cheated")
-    }
-  }, [gameState])
-
-  useEffect(() => {
-    document.addEventListener("visibilitychange", handleVisibilityChange)
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange)
+    \}
+  \}, [gameState])
+  \
+  useEffect(() => \
+  \
+    document.addEventListener(\"visibilitychange\", handleVisibilityChange)\
+    return () => \{\
+      document.removeEventListener(\"visibilitychange\", handleVisibilityChange)\
       if (reactionTimeoutRef.current) clearTimeout(reactionTimeoutRef.current)
-    }
-  }, [handleVisibilityChange])
+    \
+  \
+}
+, [handleVisibilityChange])
 
   /* ────────────────────── quiz timer ───────────────────── */
-  useEffect(() => {
-    if (gameState === "quiz" && timeLeft > 0) {
+  useEffect(() => \
+{
+  if (gameState === "quiz" && timeLeft > 0)
+  \
+  \
       timerIntervalRef.current = setInterval(() => setTimeLeft((prev) => prev - 1), 1000)
-    } else if (timeLeft === 0 && gameState === "quiz") {
-      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current)
-      handleFinishQuiz()
-    }
-    return () => {
-      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current)
-    }
-  }, [gameState, timeLeft])
+    \
+  else
+  if (timeLeft === 0 && gameState === "quiz")
+  \
+  if (timerIntervalRef.current) clearInterval(timerIntervalRef.current)
+  handleFinishQuiz()
+  \
+  return () => \
+  if (timerIntervalRef.current) clearInterval(timerIntervalRef.current)
+  \
+  \
+  \
+}
+, [gameState, timeLeft])
 
-  /* ──────────────────── config helpers ─────────────────── */
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file && file.type === "application/pdf") {
-      setPdfFile(file)
+/* ──────────────────── config helpers ─────────────────── */
+const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => \
+{
+  \
+  const file = e.target.files?.[0]
+  if (file && file.type === "application/pdf")
+  \
+  setPdfFile(file)
+  \
       setError(null)
-      setBotMessage(`Got it! "${file.name}" is locked and loaded.`)
-    } else {
-      setPdfFile(null)
-      setError("Please upload a valid PDF file.")
-      setBotMessage("Whoops, that doesn't look like a PDF. Please try again.")
-    }
-  }
+      setBotMessage(`Got it! "$\{file.name\}" is locked and loaded.`)
+    \
+  else \
+  setPdfFile(null)
+  setError("Please upload a valid PDF file.")
+  setBotMessage("Whoops, that doesn't look like a PDF. Please try again.")
+  \
+  \
+}
 
-  const handleNextStep = () => {
+const handleNextStep = () => \
+{
     triggerEyeState("focused")
-    switch (configStep) {
+    switch (configStep) \{
       case "upload":
         setConfigStep("target")
-        setBotMessage("Okay, what's your target score? Use the slider to set a goal.")
+        setBotMessage("Okay, what\'s your target score? Use the slider to set a goal.")
         break
       case "target":
         setConfigStep("bet")
         setBotMessage("Time to raise the stakes. How many coins will you bet?")
-        break
+        break\
       case "bet":
         setConfigStep("duration")
         setBotMessage("How much time do you need? Choose a duration.")
@@ -121,12 +149,12 @@ export default function PassFailBot() {
         setConfigStep("confirm")
         setBotMessage("All set! Review your choices and let's begin.")
         break
-    }
-  }
+    \}
+  \}
 
-  const handlePrevStep = () => {
+  const handlePrevStep = () => \{
     triggerEyeState("focused")
-    switch (configStep) {
+    switch (configStep) \{
       case "target":
         setConfigStep("upload")
         setBotMessage(initialBotMessage)
@@ -136,50 +164,50 @@ export default function PassFailBot() {
         setBotMessage("Okay, what's your target score? Use the slider to set a goal.")
         break
       case "duration":
-        setConfigStep("bet")
+        setConfigStep(\"bet")
         setBotMessage("Time to raise the stakes. How many coins will you bet?")
         break
       case "confirm":
         setConfigStep("duration")
         setBotMessage("How much time do you need? Choose a duration.")
         break
-    }
-  }
+    \}
+  \}
 
-  const handleTargetChange = (v: number) => {
+  const handleTargetChange = (v: number) => \{
     setTargetScore(v)
-    if (v === 100) setBotMessage("100%?! A perfect score... a bold and difficult challenge.")
+    if (v === 100) setBotMessage(\"100%?! A perfect score... a bold and difficult challenge.")
     else if (v >= 70) setBotMessage("Feeling confident, huh? A worthy goal.")
     else if (v >= 40) setBotMessage("A reasonable target. Let's see if you can hit it.")
     else setBotMessage("Playing it safe, I see. A wise strategy.")
-  }
-
-  const handleBetChange = (v: number) => {
-    setBetAmount(v)
+  \}
+\
+  const handleBetChange = (v: number) => \{\
+    setBetAmount(v)\
     const ratio = v / coins
     if (ratio === 1) setBotMessage("All in! Fortune favors the bold.")
     else if (ratio > 0.75) setBotMessage("Going big! I like your style.")
     else if (ratio > 0.25) setBotMessage("A respectable bet. Good luck!")
     else setBotMessage("A cautious wager. I understand.")
-  }
-
-  const handleDurationChange = (v: number) => {
+  \}
+\
+  const handleDurationChange = (v: number) => \{
     setDuration(v)
     if (v >= 60) setBotMessage("An hour should be plenty of time. No pressure!")
-    else if (v >= 30) setBotMessage(`${v} minutes. A good amount of time to focus.`)
-    else setBotMessage(`${v} minutes. Quick and decisive!`)
-  }
+    else if (v >= 30) setBotMessage(`$\{v\} minutes. A good amount of time to focus.`)
+    else setBotMessage(`$\{v\} minutes. Quick and decisive!`)
+  \}
 
   /* ────────────────── API / quiz start ─────────────────── */
-  const handleStartQuiz = async () => {
-    if (!pdfFile) {
+  const handleStartQuiz = async () => \{
+    if (!pdfFile) \
       setError("Please select a PDF file first.")
       return
-    }
-    if (coins < betAmount) {
+    \
+    if (coins < betAmount) \
       setError("You don't have enough coins for this bet.")
       return
-    }
+    \
 
     setGameState("loading")
     setEyeState("focused")
@@ -189,11 +217,11 @@ export default function PassFailBot() {
     const formData = new FormData()
     formData.append("file", pdfFile)
 
-    try {
-      const res = await fetch("/api/generate-quiz", {
+    try \{
+      const res = await fetch("/api/generate-quiz", \{
         method: "POST",
         body: formData,
-      })
+      \})
       if (!res.ok) throw new Error("Failed to generate quiz.")
       const generatedQuiz: Quiz = await res.json()
 
@@ -201,27 +229,27 @@ export default function PassFailBot() {
       setUserAnswers(new Array(generatedQuiz.questions.length).fill(null))
       setTimeLeft(duration * 60)
       setGameState("quiz")
-    } catch (err: any) {
+    \} catch (err: any) \
       setError(err.message ?? "Unexpected error.")
       setCoins((prev) => prev + betAmount) // refund
       setGameState("config")
       setEyeState("idle")
-    }
-  }
+    \
+  \}
 
   /* ─────────────────── in-quiz helpers ─────────────────── */
-  const handleAnswerSelect = (option: string) => {
+  const handleAnswerSelect = (option: string) => \{
     const next = [...userAnswers]
     next[currentQuestionIndex] = option
     setUserAnswers(next)
-  }
+  \}
 
-  const handleNextQuestion = () => {
+  const handleNextQuestion = () => \{
     if (currentQuestionIndex < (quiz?.questions.length ?? 0) - 1) setCurrentQuestionIndex((i) => i + 1)
     else handleFinishQuiz()
-  }
+  \}
 
-  const handleFinishQuiz = () => {
+  const handleFinishQuiz = () => \{
     if (!quiz) return
     if (timerIntervalRef.current) clearInterval(timerIntervalRef.current)
 
@@ -229,19 +257,19 @@ export default function PassFailBot() {
     const score = Math.round((correct / quiz.questions.length) * 100)
     setFinalScore(score)
 
-    if (score >= targetScore) {
+    if (score >= targetScore) \{
       const win = Math.floor(betAmount * (1 + targetScore / 100))
       setPayout(win)
       setCoins((prev) => prev + win)
       setEyeState("win")
-    } else {
+    \} else \
       setPayout(0)
       setEyeState("lose")
-    }
+    \
     setGameState("result")
-  }
+  \}
 
-  const handlePlayAgain = () => {
+  const handlePlayAgain = () => \{
     setGameState("config")
     setConfigStep("upload")
     setPdfFile(null)
@@ -251,129 +279,129 @@ export default function PassFailBot() {
     setError(null)
     setEyeState("idle")
     setBotMessage(initialBotMessage)
-  }
+  \}
 
   /* ───────────────────── config UI ─────────────────────── */
   const renderConfigStep = () => (
     <div className="flex flex-col items-center gap-4">
-      <RobotScene eyeState={eyeState} />
-      <DialogueBox text={botMessage} />
+      <RobotScene eyeState=\{eyeState\} />
+      <DialogueBox text=\{botMessage\} />
 
-      <Card className="w-full max-w-md pixel-border bg-card/90 backdrop-blur-sm">
+      <Card className="w-full max-w-md">
         <CardContent className="space-y-6 pt-6">
-          {/* STEP: upload */}
-          {configStep === "upload" && (
+          \{/* STEP: upload */\}
+          \{configStep === "upload" && (
             <label
               htmlFor="file-upload"
               className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-secondary"
             >
               <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                <Upload size={32} />
-                <p className="mt-2 text-sm">{pdfFile ? pdfFile.name : "Upload Lecture PDF"}</p>
+                <Upload size=\{32\} />
+                <p className="mt-2 text-sm">\{pdfFile ? pdfFile.name : "Upload Lecture PDF"\}</p>
               </div>
               <input
                 id="file-upload"
                 type="file"
                 className="hidden"
                 accept="application/pdf"
-                onChange={handleFileChange}
+                onChange=\{handleFileChange\}
               />
             </label>
-          )}
+          )\}
 
-          {/* STEP: target */}
-          {configStep === "target" && (
+          \{/* STEP: target */\}
+          \{configStep === "target" && (
             <div>
               <div className="flex justify-between text-sm mb-2">
                 <label>
-                  <Target className="inline mr-2 text-fail" size={16} />
+                  <Target className="inline mr-2 text-destructive" size=\{16\} />
                   Target Score
                 </label>
-                <span>{targetScore}%</span>
+                <span>\{targetScore\}%</span>
               </div>
-              <Slider value={[targetScore]} onValueChange={([v]) => handleTargetChange(v)} step={10} />
+              <Slider value=\{[targetScore]\} onValueChange=\{([v]) => handleTargetChange(v)\} step=\{10\} />
             </div>
-          )}
+          )\}
 
-          {/* STEP: bet */}
-          {configStep === "bet" && (
+          \{/* STEP: bet */\}
+          \{configStep === "bet" && (
             <div>
               <div className="flex justify-between text-sm mb-2">
                 <label>
-                  <Coins className="inline mr-2 text-coin" size={16} />
+                  <Coins className="inline mr-2 text-yellow-500" size=\{16\} />
                   Bet Amount
                 </label>
                 <span>
-                  {betAmount} (Balance: {coins})
+                  \{betAmount\} (Balance: \{coins\})
                 </span>
               </div>
-              <Slider value={[betAmount]} onValueChange={([v]) => handleBetChange(v)} min={10} max={coins} step={10} />
+              <Slider value=\{[betAmount]\} onValueChange=\{([v]) => handleBetChange(v)\} min=\{10\} max=\{coins\} step=\{10\} />
             </div>
-          )}
+          )\}
 
-          {/* STEP: duration */}
-          {configStep === "duration" && (
+          \{/* STEP: duration */\}
+          \{configStep === "duration" && (
             <div>
               <div className="flex justify-between text-sm mb-2">
                 <label>
-                  <Clock className="inline mr-2 text-pass" size={16} />
+                  <Clock className="inline mr-2 text-green-600" size=\{16\} />
                   Duration
                 </label>
-                <span>{duration} min</span>
+                <span>\{duration\} min</span>
               </div>
               <div className="grid grid-cols-4 gap-2">
-                {[15, 30, 45, 60].map((d) => (
+                \{[15, 30, 45, 60].map((d) => (
                   <Button
-                    key={d}
-                    variant={duration === d ? "default" : "outline"}
-                    onClick={() => handleDurationChange(d)}
+                    key=\{d\}
+                    variant=\{duration === d ? "default" : "outline"\}
+                    onClick=\{() => handleDurationChange(d)\}
                   >
-                    {d}
+                    \{d\}
                   </Button>
-                ))}
+                ))\}
               </div>
             </div>
-          )}
+          )\}
 
-          {/* STEP: confirm */}
-          {configStep === "confirm" && (
+          \{/* STEP: confirm */\}
+          \{configStep === "confirm" && (
             <div className="space-y-2 text-sm p-2">
               <div className="flex justify-between">
-                <span>PDF:</span> <span>{pdfFile?.name}</span>
+                <span>PDF:</span> <span>\{pdfFile?.name\}</span>
               </div>
               <div className="flex justify-between">
-                <span>Target:</span> <span>{targetScore}%</span>
+                <span>Target:</span> <span>\{targetScore\}%</span>
               </div>
               <div className="flex justify-between">
-                <span>Bet:</span> <span>{betAmount} coins</span>
+                <span>Bet:</span> <span>\{betAmount\} coins</span>
               </div>
               <div className="flex justify-between">
-                <span>Duration:</span> <span>{duration} min</span>
+                <span>Duration:</span> <span>\{duration\} min</span>
               </div>
             </div>
-          )}
+          )\}
 
-          {error && <p className="text-fail text-sm text-center">{error}</p>}
+          \{error && <p className="text-destructive text-sm text-center">\{error\}</p>\}
 
-          {/* nav buttons */}
+          \{/* nav buttons */\}
           <div className="flex justify-between w-full pt-4">
-            {configStep !== "upload" ? (
-              <Button variant="outline" onClick={handlePrevStep}>
-                <ArrowLeft className="mr-2" size={16} /> Back
+            \{configStep !== "upload" ? (
+              <Button variant="outline" onClick=\{handlePrevStep\}>
+                <ArrowLeft className="mr-2" size=\{16\} /> Back
               </Button>
             ) : (
               <span />
-            )}
+            )\}
 
-            {configStep !== "confirm" ? (
-              <Button onClick={handleNextStep} disabled={configStep === "upload" && !pdfFile}>
-                Next <ArrowRight className="ml-2" size={16} />
+            \{configStep !== "confirm" ? (
+              <Button onClick=\{handleNextStep\} disabled=\{configStep === "upload" && !pdfFile\}>
+                Next <ArrowRight className="ml-2" size=\{16\} />
               </Button>
             ) : (
-              <Button className="w-full" onClick={handleStartQuiz}>
+              <Button className="w-full" onClick=\{handleStartQuiz\}>
                 Start Quiz!
               </Button>
-            )}
+            )\}
           </div>
         </CardContent>
       </Card>
@@ -381,11 +409,11 @@ export default function PassFailBot() {
   )
 
   /* ────────────────────── main render ──────────────────── */
-  const renderContent = () => {
-    switch (gameState) {
+  const renderContent = () => \{
+    switch (gameState) \{
       case "loading":
         return (
-          <Card className="w-full max-w-md pixel-border bg-card/90 backdrop-blur-sm text-center p-8">
+          <Card className="w-full max-w-md text-center p-8">
             <div className="flex flex-col items-center">
               <RobotScene eyeState="focused" />
               <p className="text-2xl animate-pulse mt-4">Generating your quiz...</p>
@@ -400,49 +428,49 @@ export default function PassFailBot() {
         if (!quiz) return null
         const q = quiz.questions[currentQuestionIndex]
         return (
-          <Card className="w-full max-w-4xl pixel-border bg-card/90 backdrop-blur-sm">
+          <Card className="w-full max-w-4xl">
             <CardContent className="p-6">
-              <div className="border-b-4 border-double pb-4 mb-4 text-sm flex justify-between items-center">
+              <div className="border-b-2 pb-4 mb-4 text-sm flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  <Coins size={20} className="text-coin" />
-                  <span>{coins}</span>
+                  <Coins size=\{20\} className="text-yellow-500" />
+                  <span>\{coins\}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Clock size={20} className="text-pass" />
+                  <Clock size=\{20\} className="text-green-600" />
                   <span>
-                    {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, "0")}
+                    \{Math.floor(timeLeft / 60)\}:\{(timeLeft % 60).toString().padStart(2, "0")\}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Target size={20} className="text-fail" />
-                  <span>Target: {targetScore}%</span>
+                  <Target size=\{20\} className="text-destructive" />
+                  <span>Target: \{targetScore\}%</span>
                 </div>
               </div>
 
-              <Progress value={((currentQuestionIndex + 1) / quiz.questions.length) * 100} className="mb-6" />
+              <Progress value=\{((currentQuestionIndex + 1) / quiz.questions.length) * 100\} className="mb-6" />
 
-              <p className="text-lg mb-6 leading-relaxed">{`Q${currentQuestionIndex + 1}: ${q.question}`}</p>
+              <p className="text-lg mb-6 leading-relaxed">\{`Q$\{currentQuestionIndex + 1\}: $\{q.question\}`\}</p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {q.options.map((opt) => (
+                \{q.options.map((opt) => (
                   <Button
-                    key={opt}
+                    key=\{opt\}
                     variant="outline"
-                    className={cn(
+                    className=\{cn(
                       "p-4 h-auto justify-start whitespace-normal",
                       userAnswers[currentQuestionIndex] === opt && "bg-primary text-primary-foreground",
-                    )}
-                    onClick={() => handleAnswerSelect(opt)}
+                    )\}
+                    onClick=\{() => handleAnswerSelect(opt)\}
                   >
-                    {opt}
+                    \{opt\}
                   </Button>
-                ))}
+                ))\}
               </div>
 
               <div className="mt-8 flex justify-end">
-                <Button onClick={handleNextQuestion} disabled={!userAnswers[currentQuestionIndex]}>
-                  {currentQuestionIndex === quiz.questions.length - 1 ? "Finish" : "Next"}{" "}
-                  <ArrowRight className="ml-2" size={16} />
+                <Button onClick=\{handleNextQuestion\} disabled=\{!userAnswers[currentQuestionIndex]\}>
+                  \{currentQuestionIndex === quiz.questions.length - 1 ? "Finish" : "Next"\}\{" "\}
+                  <ArrowRight className="ml-2" size=\{16\} />
                 </Button>
               </div>
             </CardContent>
@@ -453,21 +481,21 @@ export default function PassFailBot() {
         const won = finalScore >= targetScore
         return (
           <div className="flex flex-col items-center gap-4">
-            <RobotScene eyeState={won ? "win" : "lose"} />
-            <Card className="w-full max-w-md pixel-border text-center bg-card/90 backdrop-blur-sm">
+            <RobotScene eyeState=\{won ? "win" : "lose"\} />
+            <Card className="w-full max-w-md text-center">
               <CardContent className="space-y-4 py-8">
-                <h2 className={cn("text-4xl font-bold", won ? "text-pass" : "text-fail")}>
-                  {won ? "YOU PASSED!" : "YOU FAILED!"}
+                <h2 className=\{cn("text-4xl font-bold", won ? "text-green-600" : "text-destructive")\}>
+                  \{won ? "YOU PASSED!" : "YOU FAILED!"\}
                 </h2>
-                <p className="text-xl">Your Score: {finalScore}%</p>
-                <p className="text-lg text-muted-foreground">Target Score: {targetScore}%</p>
+                <p className="text-xl">Your Score: \{finalScore\}%</p>
+                <p className="text-lg text-muted-foreground">Target Score: \{targetScore\}%</p>
                 <hr className="border-dashed" />
-                <p className="text-xl">Bet: {betAmount} coins</p>
-                <p className={cn("text-xl", won ? "text-pass" : "text-fail")}>
-                  {won ? `Payout: +${payout} coins` : `Lost: -${betAmount} coins`}
+                <p className="text-xl">Bet: \{betAmount\} coins</p>
+                <p className=\{cn("text-xl", won ? "text-green-600" : "text-destructive")\}>
+                  \{won ? `Payout: +$\{payout\} coins` : `Lost: -$\{betAmount\} coins`\}
                 </p>
-                <p className="text-lg">New Balance: {coins} coins</p>
-                <Button onClick={handlePlayAgain} className="mt-4">
+                <p className="text-lg">New Balance: \{coins\} coins</p>
+                <Button onClick=\{handlePlayAgain\} className="mt-4">
                   Play Again
                 </Button>
               </CardContent>
@@ -477,14 +505,14 @@ export default function PassFailBot() {
 
       case "cheated":
         return (
-          <Card className="w-full max-w-md pixel-border text-center bg-destructive/90 backdrop-blur-sm text-destructive-foreground">
+          <Card className="w-full max-w-md text-center bg-destructive text-destructive-foreground">
             <CardContent className="space-y-4 py-8">
               <h2 className="text-4xl font-bold">QUIZ FORFEITED</h2>
-              <AlertTriangle size={48} className="mx-auto" />
+              <AlertTriangle size=\{48\} className="mx-auto" />
               <p className="text-xl">You switched tabs during the quiz.</p>
-              <p className="text-lg">Your bet of {betAmount} coins is lost.</p>
-              <p className="text-lg">New Balance: {coins} coins</p>
-              <Button onClick={handlePlayAgain} variant="secondary">
+              <p className="text-lg">Your bet of \{betAmount\} coins is lost.</p>
+              <p className="text-lg">New Balance: \{coins\} coins</p>
+              <Button onClick=\{handlePlayAgain\} variant="secondary">
                 Try Again
               </Button>
             </CardContent>
@@ -494,10 +522,10 @@ export default function PassFailBot() {
       case "config":
       default:
         return renderConfigStep()
-    }
-  }
+    \}
+  \}
 
   return (
-    <main className="relative z-10 flex min-h-screen flex-col items-center justify-center p-8">{renderContent()}</main>
+    <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-gray-50">\{renderContent()\}</main>
   )
-}
+\}
