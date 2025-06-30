@@ -2,7 +2,6 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Press_Start_2P } from "next/font/google"
 import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
 
 const pressStart2P = Press_Start_2P({
   subsets: ["latin"],
@@ -22,12 +21,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${pressStart2P.variable} font-sans`}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
-          {children}
-        </ThemeProvider>
-      </body>
+    <html lang="en">
+      <body className={`${pressStart2P.variable} font-sans`}>{children}</body>
     </html>
   )
 }

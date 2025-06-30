@@ -1,7 +1,6 @@
 import type { Config } from "tailwindcss"
 
 const config: Config = {
-  darkMode: ["class"],
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -54,6 +53,9 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        pass: "hsl(var(--pass))",
+        fail: "hsl(var(--fail))",
+        coin: "hsl(var(--coin))",
       },
       borderRadius: {
         lg: "var(--radius)",

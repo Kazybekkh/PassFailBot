@@ -4,48 +4,54 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 10% 3.9%;
-    --radius: 0.5rem;
-  }
+    /* Pastel Pixel Classroom Palette */
+    --background-hex: #f4f4f4;
+    --foreground-hex: #2d2d2d;
+    --card-hex: #ffffff;
+    --card-foreground-hex: #2d2d2d;
+    --popover-hex: #ffffff;
+    --popover-foreground-hex: #2d2d2d;
+    --primary-hex: #2d2d2d;
+    --primary-foreground-hex: #f4f4f4;
+    --secondary-hex: #e0e0e0;
+    --secondary-foreground-hex: #2d2d2d;
+    --muted-hex: #e0e0e0;
+    --muted-foreground-hex: #757575;
+    --accent-hex: #edd07e;
+    --accent-foreground-hex: #2d2d2d;
+    --destructive-hex: #ff5252;
+    --destructive-foreground-hex: #f4f4f4;
+    --border-hex: #c0c0c0;
+    --input-hex: #c0c0c0;
+    --ring-hex: #edd07e;
+    --pass-hex: #4caf50;
+    --fail-hex: #ff5252;
+    --coin-hex: #edd07e;
 
-  .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    --background: 240 0% 96%; /* #f4f4f4 */
+    --foreground: 0 0% 18%; /* #2d2d2d */
+    --card: 0 0% 100%; /* #ffffff */
+    --card-foreground: 0 0% 18%; /* #2d2d2d */
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 18%;
+    --primary: 0 0% 18%;
+    --primary-foreground: 240 0% 96%;
+    --secondary: 0 0% 88%; /* #e0e0e0 */
+    --secondary-foreground: 0 0% 18%;
+    --muted: 0 0% 88%;
+    --muted-foreground: 0 0% 46%; /* #757575 */
+    --accent: 46 79% 71%; /* #edd07e */
+    --accent-foreground: 0 0% 18%;
+    --destructive: 0 100% 66%; /* #ff5252 */
+    --destructive-foreground: 240 0% 96%;
+    --border: 0 0% 75%; /* #c0c0c0 */
+    --input: 0 0% 75%;
+    --ring: 46 79% 71%;
+    --radius: 0.5rem;
+
+    --pass: 122 39% 49%; /* #4caf50 */
+    --fail: 0 100% 66%; /* #ff5252 */
+    --coin: 46 79% 71%; /* #edd07e */
   }
 }
 
@@ -60,8 +66,8 @@
   }
 
   .pixel-border {
-    @apply border-4 border-double;
-    box-shadow: 0 0 0 2px theme("colors.background");
+    @apply border-4 border-double border-border;
+    box-shadow: 0 0 0 2px var(--card-hex); /* Use card color for clean edge */
   }
 }
 
@@ -70,13 +76,13 @@
     @apply flex justify-center items-center gap-4 h-24;
   }
   .eye {
-    @apply w-16 h-8 bg-cyan-400 rounded-full shadow-[0_0_15px_5px_rgba(0,255,255,0.5)];
+    @apply w-16 h-8 bg-primary rounded-full;
     transition: all 0.3s ease-in-out;
   }
   .eye-win {
-    @apply h-10 rounded-t-full rounded-b-md;
+    @apply h-10 rounded-t-full rounded-b-md bg-pass shadow-[0_0_15px_5px_rgba(76,175,80,0.5)];
   }
   .eye-lose {
-    @apply h-4 bg-red-500 shadow-[0_0_15px_5px_rgba(255,0,0,0.5)];
+    @apply h-4 bg-fail shadow-[0_0_15px_5px_rgba(255,82,82,0.5)];
   }
 }

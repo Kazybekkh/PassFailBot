@@ -200,11 +200,11 @@ export default function PassFailBot() {
         if (!quiz) return null
         const question = quiz.questions[currentQuestionIndex]
         return (
-          <Card className="w-full max-w-4xl pixel-border">
+          <Card className="w-full max-w-4xl pixel-border bg-card">
             <CardHeader className="border-b-4 border-double">
               <div className="flex justify-between items-center text-sm">
                 <div className="flex items-center gap-2">
-                  <Coins size={16} />
+                  <Coins size={16} className="text-coin" />
                   <span>{coins}</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -251,9 +251,9 @@ export default function PassFailBot() {
         return (
           <div className="flex flex-col items-center gap-4">
             <EveEyes state={won ? "win" : "lose"} />
-            <Card className="w-full max-w-md pixel-border text-center">
+            <Card className="w-full max-w-md pixel-border text-center bg-card">
               <CardHeader>
-                <CardTitle className={cn("text-4xl", won ? "text-green-400" : "text-red-400")}>
+                <CardTitle className={cn("text-4xl", won ? "text-pass" : "text-fail")}>
                   {won ? "YOU PASSED!" : "YOU FAILED!"}
                 </CardTitle>
               </CardHeader>
@@ -262,7 +262,7 @@ export default function PassFailBot() {
                 <p className="text-lg text-muted-foreground">Target Score: {targetScore}%</p>
                 <hr className="border-dashed" />
                 <p className="text-xl">Bet: {betAmount} coins</p>
-                <p className={cn("text-xl", won ? "text-green-400" : "text-red-400")}>
+                <p className={cn("text-xl", won ? "text-pass" : "text-fail")}>
                   {won ? `Payout: +${payout} coins` : `Lost: -${betAmount} coins`}
                 </p>
                 <p className="text-lg">New Balance: {coins} coins</p>
@@ -295,7 +295,7 @@ export default function PassFailBot() {
         return (
           <div className="flex flex-col items-center gap-4">
             <EveEyes state={eyeState} />
-            <Card className="w-full max-w-md pixel-border">
+            <Card className="w-full max-w-md pixel-border bg-card">
               <CardHeader>
                 <CardTitle className="text-center text-3xl">PassFailBot</CardTitle>
               </CardHeader>
@@ -322,7 +322,7 @@ export default function PassFailBot() {
                 <div>
                   <div className="flex justify-between text-sm mb-2">
                     <label>
-                      <Target className="inline mr-2 text-[rgba(255,0,0,1)]" size={16} />
+                      <Target className="inline mr-2 text-fail" size={16} />
                       Target Score
                     </label>
                     <span>{targetScore}%</span>
@@ -340,7 +340,7 @@ export default function PassFailBot() {
                 <div>
                   <div className="flex justify-between text-sm mb-2">
                     <label>
-                      <Coins className="inline mr-2 text-[rgba(255,224,0,1)]" size={16} />
+                      <Coins className="inline mr-2 text-coin" size={16} />
                       Bet Amount
                     </label>
                     <span>
@@ -362,7 +362,7 @@ export default function PassFailBot() {
                 <div>
                   <div className="flex justify-between text-sm mb-2">
                     <label>
-                      <Clock className="inline mr-2 text-[rgba(105,228,104,1)]" size={16} />
+                      <Clock className="inline mr-2 text-pass" size={16} />
                       Duration
                     </label>
                     <span>{duration} min</span>
@@ -383,7 +383,7 @@ export default function PassFailBot() {
                   </div>
                 </div>
 
-                {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+                {error && <p className="text-fail text-sm text-center">{error}</p>}
 
                 <Button className="w-full" onClick={handleStartQuiz} disabled={!pdfFile}>
                   Start Quiz
