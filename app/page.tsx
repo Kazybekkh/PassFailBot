@@ -2,7 +2,19 @@
 
 import type React from "react"
 import { useState, useRef, useCallback, useEffect } from "react"
-import { Upload, Coins, Target, Clock, AlertTriangle, ArrowRight, ArrowLeft, Wand2, BookOpen } from "lucide-react"
+import {
+  Upload,
+  Coins,
+  Target,
+  Clock,
+  AlertTriangle,
+  ArrowRight,
+  ArrowLeft,
+  Wand2,
+  BookOpen,
+  CheckCircle,
+  XCircle,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
@@ -10,7 +22,7 @@ import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
 import { useTypewriter } from "@/hooks/use-typewriter"
 
-type GameState = "config" | "loading" | "quiz" | "result" | "cheated"
+type GameState = "config" | "loading" | "quiz" | "result" | "cheated" | "review" // UPDATED: Added 'review' state
 type ConfigStep = "upload" | "style" | "target" | "bet" | "duration" | "confirm"
 type EyeState = "idle" | "focused" | "win" | "lose"
 type QuizStyle = "strict" | "similar"
@@ -25,7 +37,6 @@ type Quiz = {
   questions: Question[]
 }
 
-// UPDATED: Type for last bet information
 type LastBet = {
   won: boolean
   betAmount: number
@@ -84,7 +95,7 @@ const Dialogue = ({ text }: { text: string }) => {
   )
 }
 
-// NEW: Stats Panel Component
+// Stats Panel Component
 const StatsPanel = ({ coins, lastBet }: { coins: number; lastBet: LastBet | null }) => (
   <Card>
     <CardHeader>
@@ -152,7 +163,7 @@ export default function PassFailBot() {
   const [finalScore, setFinalScore] = useState(0)
   const [payout, setPayout] = useState(0)
   const [timeLeft, setTimeLeft] = useState(0)
-  const [lastBet, setLastBet] = useState<LastBet | null>(null) // UPDATED: State for last bet
+  const [lastBet, setLastBet] = useState<LastBet | null>(null)
 
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const reactionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -375,7 +386,6 @@ export default function PassFailBot() {
       setEyeState("lose")
     }
 
-    // UPDATED: Set last bet info for the stats panel
     setLastBet({
       won,
       betAmount,
@@ -635,12 +645,64 @@ export default function PassFailBot() {
                   {won ? `Payout: +${payout} coins` : `Lost: -${betAmount} coins`}
                 </p>
                 <p className="text-lg">New Balance: {coins} coins</p>
-                <Button onClick={handlePlayAgain} className="mt-4">
-                  Play Again
-                </Button>
+                <div className="flex gap-4 justify-center pt-4">
+                  <Button onClick={handlePlayAgain}>Play Again</Button>
+                  <Button variant="outline" onClick={() => setGameState("review")}>
+                    Review Answers
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
+        )
+
+      case "review": // NEW: Review screen case
+        if (!quiz) return null
+        return (
+          <Card className="w-full max-w-4xl">
+            <CardHeader>
+              <CardTitle>Quiz Review</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-8">
+              {quiz.questions.map((q, i) => {
+                const userAnswer = userAnswers[i]
+                const isCorrect = userAnswer === q.answer
+                return (
+                  <div key={i} className="border-b pb-4">
+                    <p className="font-body text-lg mb-4">{`Q${i + 1}: ${q.question}`}</p>
+                    <div className="space-y-2">
+                      {q.options.map((opt) => {
+                        const isUserAnswer = userAnswer === opt
+                        const isCorrectAnswer = q.answer === opt
+                        return (
+                          <div
+                            key={opt}
+                            className={cn(
+                              "flex items-center gap-3 rounded-md border p-3 text-sm font-body",
+                              isCorrectAnswer && "border-green-500 bg-green-50 text-green-900",
+                              isUserAnswer && !isCorrectAnswer && "border-red-500 bg-red-50 text-red-900",
+                            )}
+                          >
+                            {isCorrectAnswer ? (
+                              <CheckCircle className="h-5 w-5 text-green-600" />
+                            ) : isUserAnswer ? (
+                              <XCircle className="h-5 w-5 text-red-600" />
+                            ) : (
+                              <div className="h-5 w-5" /> // Placeholder for alignment
+                            )}
+                            <span>{opt}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })}
+              <div className="flex justify-center pt-4">
+                <Button onClick={handlePlayAgain}>Play Again</Button>
+              </div>
+            </CardContent>
+          </Card>
         )
 
       case "cheated":
