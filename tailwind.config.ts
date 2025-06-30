@@ -72,10 +72,12 @@ const config: Config = {
           to: { height: "0" },
         },
         float: {
+          // The idle floating animation
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-10px)" },
         },
         squint: {
+          // The focused animation
           "0%, 100%": { transform: "scaleY(1)" },
           "50%": { transform: "scaleY(0.2)" },
         },

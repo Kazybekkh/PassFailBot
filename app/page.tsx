@@ -8,8 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
-import { RobotScene } from "@/components/robot-scene"
-import type { EyeState } from "@/components/eve-eyes"
+import { RobotScene, type EyeState } from "@/components/robot-scene"
 import { DialogueBox } from "@/components/dialogue-box"
 
 type GameState = "config" | "loading" | "quiz" | "result" | "cheated"
@@ -28,6 +27,7 @@ type Quiz = {
 const initialBotMessage = "Hello! First, upload the PDF you want to be quizzed on."
 
 export default function PassFailBot() {
+  /* ──────────────────────── state ──────────────────────── */
   const [gameState, setGameState] = useState<GameState>("config")
   const [configStep, setConfigStep] = useState<ConfigStep>("upload")
   const [eyeState, setEyeState] = useState<EyeState>("idle")
@@ -50,6 +50,7 @@ export default function PassFailBot() {
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const reactionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
+  /* ────────────────── eye reactions helper ─────────────── */
   const triggerEyeState = useCallback((state: EyeState, durationMs = 800) => {
     if (reactionTimeoutRef.current) clearTimeout(reactionTimeoutRef.current)
     setEyeState(state)
@@ -58,6 +59,7 @@ export default function PassFailBot() {
     }
   }, [])
 
+  /* ───────────── anti-cheat: tab visibility change ─────── */
   const handleVisibilityChange = useCallback(() => {
     if (document.hidden && gameState === "quiz") {
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current)
@@ -73,6 +75,7 @@ export default function PassFailBot() {
     }
   }, [handleVisibilityChange])
 
+  /* ────────────────────── quiz timer ───────────────────── */
   useEffect(() => {
     if (gameState === "quiz" && timeLeft > 0) {
       timerIntervalRef.current = setInterval(() => setTimeLeft((prev) => prev - 1), 1000)
@@ -85,6 +88,7 @@ export default function PassFailBot() {
     }
   }, [gameState, timeLeft])
 
+  /* ──────────────────── config helpers ─────────────────── */
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file && file.type === "application/pdf") {
@@ -166,6 +170,7 @@ export default function PassFailBot() {
     else setBotMessage(`${v} minutes. Quick and decisive!`)
   }
 
+  /* ────────────────── API / quiz start ─────────────────── */
   const handleStartQuiz = async () => {
     if (!pdfFile) {
       setError("Please select a PDF file first.")
@@ -204,6 +209,7 @@ export default function PassFailBot() {
     }
   }
 
+  /* ─────────────────── in-quiz helpers ─────────────────── */
   const handleAnswerSelect = (option: string) => {
     const next = [...userAnswers]
     next[currentQuestionIndex] = option
@@ -211,11 +217,8 @@ export default function PassFailBot() {
   }
 
   const handleNextQuestion = () => {
-    if (currentQuestionIndex < (quiz?.questions.length ?? 0) - 1) {
-      setCurrentQuestionIndex((i) => i + 1)
-    } else {
-      handleFinishQuiz()
-    }
+    if (currentQuestionIndex < (quiz?.questions.length ?? 0) - 1) setCurrentQuestionIndex((i) => i + 1)
+    else handleFinishQuiz()
   }
 
   const handleFinishQuiz = () => {
@@ -250,13 +253,15 @@ export default function PassFailBot() {
     setBotMessage(initialBotMessage)
   }
 
+  /* ───────────────────── config UI ─────────────────────── */
   const renderConfigStep = () => (
-    <div className="flex flex-col items-center gap-4 w-full max-w-md">
+    <div className="flex flex-col items-center gap-4">
       <RobotScene eyeState={eyeState} />
       <DialogueBox text={botMessage} />
 
-      <Card className="w-full">
+      <Card className="w-full max-w-md">
         <CardContent className="space-y-6 pt-6">
+          {/* STEP: upload */}
           {configStep === "upload" && (
             <label
               htmlFor="file-upload"
@@ -276,10 +281,11 @@ export default function PassFailBot() {
             </label>
           )}
 
+          {/* STEP: target */}
           {configStep === "target" && (
             <div>
               <div className="flex justify-between text-sm mb-2">
-                <label className="flex items-center">
+                <label>
                   <Target className="inline mr-2 text-destructive" size={16} />
                   Target Score
                 </label>
@@ -289,10 +295,11 @@ export default function PassFailBot() {
             </div>
           )}
 
+          {/* STEP: bet */}
           {configStep === "bet" && (
             <div>
               <div className="flex justify-between text-sm mb-2">
-                <label className="flex items-center">
+                <label>
                   <Coins className="inline mr-2 text-yellow-500" size={16} />
                   Bet Amount
                 </label>
@@ -304,10 +311,11 @@ export default function PassFailBot() {
             </div>
           )}
 
+          {/* STEP: duration */}
           {configStep === "duration" && (
             <div>
               <div className="flex justify-between text-sm mb-2">
-                <label className="flex items-center">
+                <label>
                   <Clock className="inline mr-2 text-green-600" size={16} />
                   Duration
                 </label>
@@ -327,6 +335,7 @@ export default function PassFailBot() {
             </div>
           )}
 
+          {/* STEP: confirm */}
           {configStep === "confirm" && (
             <div className="space-y-2 text-sm p-2">
               <div className="flex justify-between">
@@ -346,6 +355,7 @@ export default function PassFailBot() {
 
           {error && <p className="text-destructive text-sm text-center">{error}</p>}
 
+          {/* nav buttons */}
           <div className="flex justify-between w-full pt-4">
             {configStep !== "upload" ? (
               <Button variant="outline" onClick={handlePrevStep}>
@@ -370,15 +380,20 @@ export default function PassFailBot() {
     </div>
   )
 
+  /* ────────────────────── main render ──────────────────── */
   const renderContent = () => {
     switch (gameState) {
       case "loading":
         return (
-          <div className="flex flex-col items-center gap-4">
-            <RobotScene eyeState="focused" />
-            <p className="text-2xl animate-pulse mt-4">Generating your quiz...</p>
-            <p className="mt-4 text-sm text-muted-foreground">The AI is reading your PDF. This might take a moment.</p>
-          </div>
+          <Card className="w-full max-w-md text-center p-8">
+            <div className="flex flex-col items-center">
+              <RobotScene eyeState="focused" />
+              <p className="text-2xl animate-pulse mt-4">Generating your quiz...</p>
+              <p className="mt-4 text-sm text-muted-foreground">
+                The AI is reading your PDF. This might take a moment.
+              </p>
+            </div>
+          </Card>
         )
 
       case "quiz":
@@ -414,7 +429,7 @@ export default function PassFailBot() {
                     key={opt}
                     variant="outline"
                     className={cn(
-                      "p-4 h-auto justify-start whitespace-normal text-left",
+                      "p-4 h-auto justify-start whitespace-normal",
                       userAnswers[currentQuestionIndex] === opt && "bg-primary text-primary-foreground",
                     )}
                     onClick={() => handleAnswerSelect(opt)}
@@ -437,16 +452,16 @@ export default function PassFailBot() {
       case "result":
         const won = finalScore >= targetScore
         return (
-          <div className="flex flex-col items-center gap-4 w-full max-w-md">
+          <div className="flex flex-col items-center gap-4">
             <RobotScene eyeState={won ? "win" : "lose"} />
-            <Card className="w-full text-center">
+            <Card className="w-full max-w-md text-center">
               <CardContent className="space-y-4 py-8">
                 <h2 className={cn("text-4xl font-bold", won ? "text-green-600" : "text-destructive")}>
                   {won ? "YOU PASSED!" : "YOU FAILED!"}
                 </h2>
                 <p className="text-xl">Your Score: {finalScore}%</p>
                 <p className="text-lg text-muted-foreground">Target Score: {targetScore}%</p>
-                <hr className="border-dashed my-4" />
+                <hr className="border-dashed" />
                 <p className="text-xl">Bet: {betAmount} coins</p>
                 <p className={cn("text-xl", won ? "text-green-600" : "text-destructive")}>
                   {won ? `Payout: +${payout} coins` : `Lost: -${betAmount} coins`}
@@ -482,5 +497,7 @@ export default function PassFailBot() {
     }
   }
 
-  return <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-8">{renderContent()}</main>
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-gray-50">{renderContent()}</main>
+  )
 }
