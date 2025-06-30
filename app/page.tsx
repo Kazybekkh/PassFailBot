@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
-import { useTypewriter } from "@/hooks/use-typewriter" // Import the hook
+import { useTypewriter } from "@/hooks/use-typewriter"
 
 type GameState = "config" | "loading" | "quiz" | "result" | "cheated"
 type ConfigStep = "upload" | "target" | "bet" | "duration" | "confirm"
@@ -31,18 +31,18 @@ const RobotHead = ({ state }: { state: EyeState }) => (
   <div className={cn("relative flex h-48 w-48 items-center justify-center gap-4", state === "idle" && "animate-float")}>
     <div
       className={cn(
-        "h-10 w-10 rounded-sm bg-blue-400 border-2 border-gray-800 transition-all", // UPDATED: Bigger, lighter blue eyes
+        "h-10 w-10 rounded-sm bg-[#40bcff] border-2 border-gray-800 transition-all", // UPDATED: Specific hex color for eyes
         state === "focused" && "animate-squint",
-        state === "win" && "bg-[hsl(var(--pass))] border-green-700 h-8", // Adjusted win state
-        state === "lose" && "bg-[hsl(var(--fail))] border-red-700 h-12 w-8", // Adjusted lose state
+        state === "win" && "bg-[hsl(var(--pass))] border-green-700 h-8",
+        state === "lose" && "bg-[hsl(var(--fail))] border-red-700 h-12 w-8",
       )}
     />
     <div
       className={cn(
-        "h-10 w-10 rounded-sm bg-blue-400 border-2 border-gray-800 transition-all", // UPDATED: Bigger, lighter blue eyes
+        "h-10 w-10 rounded-sm bg-[#40bcff] border-2 border-gray-800 transition-all", // UPDATED: Specific hex color for eyes
         state === "focused" && "animate-squint",
-        state === "win" && "bg-[hsl(var(--pass))] border-green-700 h-8", // Adjusted win state
-        state === "lose" && "bg-[hsl(var(--fail))] border-red-700 h-12 w-8", // Adjusted lose state
+        state === "win" && "bg-[hsl(var(--pass))] border-green-700 h-8",
+        state === "lose" && "bg-[hsl(var(--fail))] border-red-700 h-12 w-8",
       )}
     />
     <div
@@ -60,7 +60,6 @@ const RobotHead = ({ state }: { state: EyeState }) => (
 
 // Standalone Dialogue Box Component (Internal to this file)
 const Dialogue = ({ text }: { text: string }) => {
-  // UPDATED: Use the typewriter hook for animation
   const animatedText = useTypewriter(text)
   return (
     <div className="relative mb-6 w-full">
@@ -153,44 +152,38 @@ export default function PassFailBot() {
 
   const handleNextStep = () => {
     triggerEyeState("focused")
+    // UPDATED: Removed setBotMessage calls
     switch (configStep) {
       case "upload":
         setConfigStep("target")
-        setBotMessage("Okay, what's your target score? Use the slider to set a goal.")
         break
       case "target":
         setConfigStep("bet")
-        setBotMessage("Time to raise the stakes. How many coins will you bet?")
         break
       case "bet":
         setConfigStep("duration")
-        setBotMessage("How much time do you need? Choose a duration.")
         break
       case "duration":
         setConfigStep("confirm")
-        setBotMessage("All set! Review your choices and let's begin.")
         break
     }
   }
 
   const handlePrevStep = () => {
     triggerEyeState("focused")
+    // UPDATED: Removed setBotMessage calls
     switch (configStep) {
       case "target":
         setConfigStep("upload")
-        setBotMessage(initialBotMessage)
         break
       case "bet":
         setConfigStep("target")
-        setBotMessage("Okay, what's your target score? Use the slider to set a goal.")
         break
       case "duration":
         setConfigStep("bet")
-        setBotMessage("How many coins will you bet?")
         break
       case "confirm":
         setConfigStep("duration")
-        setBotMessage("How much time do you need? Choose a duration.")
         break
     }
   }
