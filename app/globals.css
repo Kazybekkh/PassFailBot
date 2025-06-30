@@ -67,6 +67,16 @@
     background-attachment: fixed;
     image-rendering: pixelated;
     font-family: var(--font-press-start-2p), system-ui, sans-serif;
+    position: relative;
+  }
+
+  body::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(2px);
+    z-index: 0;
   }
 
   .pixel-border {
@@ -80,13 +90,19 @@
     @apply flex justify-center items-center gap-4 h-24;
   }
   .eye {
-    @apply w-16 h-8 bg-primary rounded-full;
+    @apply w-12 h-12 rounded-xl;
+    background-image: linear-gradient(to bottom, #4facfe, #00f2fe);
+    box-shadow: 0 0 15px 5px rgba(79, 172, 254, 0.6);
     transition: all 0.3s ease-in-out;
   }
   .eye-win {
-    @apply h-10 rounded-t-full rounded-b-md bg-pass shadow-[0_0_15px_5px_rgba(76,175,80,0.5)];
+    @apply h-14; /* Taller for "happy" expression */
+    background-image: linear-gradient(to bottom, #4caf50, #81c784);
+    box-shadow: 0 0 15px 5px rgba(76, 175, 80, 0.6);
   }
   .eye-lose {
-    @apply h-4 bg-fail shadow-[0_0_15px_5px_rgba(255,82,82,0.5)];
+    @apply h-8; /* Shorter for "sad" expression */
+    background-image: linear-gradient(to bottom, #ff5252, #e57373);
+    box-shadow: 0 0 15px 5px rgba(255, 82, 82, 0.6);
   }
 }

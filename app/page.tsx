@@ -399,5 +399,7 @@ export default function PassFailBot() {
     }
   }
 
-  return <main className="flex min-h-screen flex-col items-center justify-center p-8">{renderContent()}</main>
+  return (
+    <main className="relative z-10 flex min-h-screen flex-col items-center justify-center p-8">{renderContent()}</main>
+  )
 }
