@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
-import { EveEyes, type EyeState } from "@/components/eve-eyes"
+import { RobotScene, type EyeState } from "@/components/robot-scene"
 
 type GameState = "config" | "loading" | "quiz" | "result" | "cheated"
 
@@ -168,10 +168,10 @@ export default function PassFailBot() {
       const calculatedPayout = Math.floor(betAmount * (1 + targetScore / 100))
       setPayout(calculatedPayout)
       setCoins((prev) => prev + calculatedPayout)
-      setEyeState("win")
+      setEyeState("win") // This triggers the 'win' look
     } else {
       setPayout(0)
-      setEyeState("lose")
+      setEyeState("lose") // This triggers the 'lose' look
     }
     setGameState("result")
   }
@@ -192,7 +192,7 @@ export default function PassFailBot() {
         return (
           <Card className="w-full max-w-md pixel-border bg-card/90 backdrop-blur-sm text-center p-8">
             <div className="flex flex-col items-center">
-              <EveEyes state="focused" />
+              <RobotScene eyeState="focused" />
               <p className="text-2xl animate-pulse mt-4">Generating your quiz...</p>
               <p className="mt-4 text-sm text-muted-foreground">
                 The AI is reading your PDF. This might take a moment.
@@ -254,7 +254,7 @@ export default function PassFailBot() {
         const won = finalScore >= targetScore
         return (
           <div className="flex flex-col items-center gap-4">
-            <EveEyes state={won ? "win" : "lose"} />
+            <RobotScene eyeState={won ? "win" : "lose"} />
             <Card className="w-full max-w-md pixel-border text-center bg-card/90 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className={cn("text-4xl", won ? "text-pass" : "text-fail")}>
@@ -298,7 +298,7 @@ export default function PassFailBot() {
       default:
         return (
           <div className="flex flex-col items-center gap-4">
-            <EveEyes state={eyeState} />
+            <RobotScene eyeState={eyeState} />
             <Card className="w-full max-w-md pixel-border bg-card/90 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="text-center text-3xl">PassFailBot</CardTitle>
