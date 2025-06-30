@@ -4,16 +4,16 @@ import type React from "react"
 import { useState, useRef, useCallback, useEffect } from "react"
 import { Upload, Coins, Target, Clock, AlertTriangle, ArrowRight, ArrowLeft, Wand2, BookOpen } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
 import { useTypewriter } from "@/hooks/use-typewriter"
 
 type GameState = "config" | "loading" | "quiz" | "result" | "cheated"
-type ConfigStep = "upload" | "style" | "target" | "bet" | "duration" | "confirm" // UPDATED: Added 'style' step
+type ConfigStep = "upload" | "style" | "target" | "bet" | "duration" | "confirm"
 type EyeState = "idle" | "focused" | "win" | "lose"
-type QuizStyle = "strict" | "similar" // UPDATED: New type for quiz style
+type QuizStyle = "strict" | "similar"
 
 type Question = {
   question: string
@@ -25,9 +25,18 @@ type Quiz = {
   questions: Question[]
 }
 
+// UPDATED: Type for last bet information
+type LastBet = {
+  won: boolean
+  betAmount: number
+  targetScore: number
+  finalScore: number
+  payout: number
+}
+
 const initialBotMessage = "Hello! First, upload the PDF you want to be quizzed on."
 
-// Standalone Robot Head Component (Internal to this file)
+// Standalone Robot Head Component
 const RobotHead = ({ state }: { state: EyeState }) => (
   <div className={cn("relative flex h-48 w-48 items-center justify-center gap-4", state === "idle" && "animate-float")}>
     <div
@@ -59,7 +68,7 @@ const RobotHead = ({ state }: { state: EyeState }) => (
   </div>
 )
 
-// Standalone Dialogue Box Component (Internal to this file)
+// Standalone Dialogue Box Component
 const Dialogue = ({ text }: { text: string }) => {
   const animatedText = useTypewriter(text)
   return (
@@ -75,6 +84,53 @@ const Dialogue = ({ text }: { text: string }) => {
   )
 }
 
+// NEW: Stats Panel Component
+const StatsPanel = ({ coins, lastBet }: { coins: number; lastBet: LastBet | null }) => (
+  <Card>
+    <CardHeader>
+      <CardTitle>Your Stats</CardTitle>
+    </CardHeader>
+    <CardContent className="space-y-4">
+      <div className="flex items-center justify-between text-lg">
+        <span className="flex items-center">
+          <Coins className="mr-2 text-yellow-500" /> Current Balance:
+        </span>
+        <span className="font-bold">{coins}</span>
+      </div>
+      <hr className="border-dashed" />
+      <h3 className="font-semibold text-md pt-2">Last Bet</h3>
+      {lastBet ? (
+        <div className="space-y-2 text-sm text-muted-foreground">
+          <div className="flex justify-between">
+            <span>Result:</span>
+            <span className={cn("font-bold", lastBet.won ? "text-green-600" : "text-destructive")}>
+              {lastBet.won ? "Win" : "Loss"}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span>Your Score / Target:</span>
+            <span>
+              {lastBet.finalScore}% / {lastBet.targetScore}%
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span>Bet Amount:</span>
+            <span>{lastBet.betAmount} coins</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Payout:</span>
+            <span className={cn("font-bold", lastBet.won ? "text-green-600" : "text-destructive")}>
+              {lastBet.won ? `+${lastBet.payout}` : `-${lastBet.betAmount}`} coins
+            </span>
+          </div>
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground text-center">Play a round to see your stats.</p>
+      )}
+    </CardContent>
+  </Card>
+)
+
 export default function PassFailBot() {
   /* ──────────────────────── state ──────────────────────── */
   const [gameState, setGameState] = useState<GameState>("config")
@@ -83,7 +139,7 @@ export default function PassFailBot() {
   const [botMessage, setBotMessage] = useState(initialBotMessage)
 
   const [pdfFile, setPdfFile] = useState<File | null>(null)
-  const [quizStyle, setQuizStyle] = useState<QuizStyle | null>(null) // UPDATED: State for quiz style
+  const [quizStyle, setQuizStyle] = useState<QuizStyle | null>(null)
   const [targetScore, setTargetScore] = useState(50)
   const [betAmount, setBetAmount] = useState(100)
   const [duration, setDuration] = useState(15)
@@ -96,6 +152,7 @@ export default function PassFailBot() {
   const [finalScore, setFinalScore] = useState(0)
   const [payout, setPayout] = useState(0)
   const [timeLeft, setTimeLeft] = useState(0)
+  const [lastBet, setLastBet] = useState<LastBet | null>(null) // UPDATED: State for last bet
 
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const reactionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -263,7 +320,7 @@ export default function PassFailBot() {
 
     const formData = new FormData()
     formData.append("file", pdfFile)
-    formData.append("style", quizStyle) // UPDATED: Pass style to API
+    formData.append("style", quizStyle)
 
     try {
       const res = await fetch("/api/generate-quiz", {
@@ -305,15 +362,28 @@ export default function PassFailBot() {
     const score = Math.round((correct / quiz.questions.length) * 100)
     setFinalScore(score)
 
-    if (score >= targetScore) {
-      const win = Math.floor(betAmount * (1 + targetScore / 100))
-      setPayout(win)
-      setCoins((prev) => prev + win)
+    const won = score >= targetScore
+    let payoutAmount = 0
+
+    if (won) {
+      payoutAmount = Math.floor(betAmount * (1 + targetScore / 100))
+      setPayout(payoutAmount)
+      setCoins((prev) => prev + payoutAmount)
       setEyeState("win")
     } else {
       setPayout(0)
       setEyeState("lose")
     }
+
+    // UPDATED: Set last bet info for the stats panel
+    setLastBet({
+      won,
+      betAmount,
+      targetScore,
+      finalScore: score,
+      payout: payoutAmount,
+    })
+
     setGameState("result")
   }
 
@@ -321,7 +391,7 @@ export default function PassFailBot() {
     setGameState("config")
     setConfigStep("upload")
     setPdfFile(null)
-    setQuizStyle(null) // UPDATED: Reset quiz style
+    setQuizStyle(null)
     setQuiz(null)
     setUserAnswers([])
     setCurrentQuestionIndex(0)
@@ -338,7 +408,6 @@ export default function PassFailBot() {
 
       <Card className="w-full max-w-md">
         <CardContent className="space-y-6 pt-6">
-          {/* STEP: upload */}
           {configStep === "upload" && (
             <label
               htmlFor="file-upload"
@@ -358,7 +427,6 @@ export default function PassFailBot() {
             </label>
           )}
 
-          {/* STEP: style */}
           {configStep === "style" && (
             <div className="grid grid-cols-2 gap-4">
               <Button
@@ -380,7 +448,6 @@ export default function PassFailBot() {
             </div>
           )}
 
-          {/* STEP: target */}
           {configStep === "target" && (
             <div>
               <div className="flex justify-between text-sm mb-2">
@@ -394,7 +461,6 @@ export default function PassFailBot() {
             </div>
           )}
 
-          {/* STEP: bet */}
           {configStep === "bet" && (
             <div>
               <div className="flex justify-between text-sm mb-2">
@@ -410,7 +476,6 @@ export default function PassFailBot() {
             </div>
           )}
 
-          {/* STEP: duration */}
           {configStep === "duration" && (
             <div>
               <div className="flex justify-between text-sm mb-2">
@@ -434,7 +499,6 @@ export default function PassFailBot() {
             </div>
           )}
 
-          {/* STEP: confirm */}
           {configStep === "confirm" && (
             <div className="space-y-2 text-sm p-2">
               <div className="flex justify-between">
@@ -457,7 +521,6 @@ export default function PassFailBot() {
 
           {error && <p className="text-destructive text-sm text-center">{error}</p>}
 
-          {/* nav buttons */}
           <div className="flex justify-between w-full pt-4">
             {configStep !== "upload" ? (
               <Button variant="outline" onClick={handlePrevStep}>
@@ -603,6 +666,11 @@ export default function PassFailBot() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-gray-50">{renderContent()}</main>
+    <main className="grid lg:grid-cols-3 gap-8 min-h-screen items-start lg:items-center p-4 sm:p-8 bg-gray-50">
+      <div className="lg:col-span-2 w-full flex items-center justify-center">{renderContent()}</div>
+      <div className="hidden lg:block w-full max-w-sm justify-self-center">
+        <StatsPanel coins={coins} lastBet={lastBet} />
+      </div>
+    </main>
   )
 }
