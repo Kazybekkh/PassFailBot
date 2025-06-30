@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ---------- Base theme ---------- */
 @layer base {
   :root {
     /* Default Theme */
@@ -42,20 +41,23 @@
   }
 }
 
-/* ---------- Components ---------- */
 @layer components {
-  /* Robot eyes / mouth */
+  /* Robot Face Components */
   .eye-container {
     @apply relative flex h-48 w-48 items-center justify-center gap-4;
   }
+
   .eye {
+    /* FIXED: Added space between background and transition utilities */
     @apply h-8 w-8 bg-[hsl(var(--foreground))] transition-all;
   }
+
   .eye-win {
-    @apply h-6        bg-[hsl(var(--pass))];
+    @apply h-6 bg-[hsl(var(--pass))];
   }
+
   .eye-lose {
-    @apply h-10 w-6   bg-[hsl(var(--fail))];
+    @apply h-10 w-6 bg-[hsl(var(--fail))];
   }
 
   .mouth {
@@ -63,20 +65,18 @@
     -webkit-mask-image: radial-gradient(circle at 50% 0, transparent 20px, black 21px);
     mask-image: radial-gradient(circle at 50% 0, transparent 20px, black 21px);
   }
+
   .mouth-win {
     @apply opacity-100;
   }
 
-  /* Dialogue bubble */
+  /* Dialogue Box Components */
   .dialogue-box {
-    /* 8 rem = Tailwind’s spacing scale 32 */
-    @apply relative flex w-full min-h-32 items-center justify-center
-           rounded-lg border-2 border-border bg-card p-4
-           text-center text-lg font-normal leading-relaxed text-card-foreground mb-6;
+    @apply relative mb-6 flex w-full min-h-32 items-center justify-center rounded-lg border-2 border-border bg-card p-4 text-center text-lg font-normal leading-relaxed text-card-foreground;
   }
 
   .dialogue-caret {
-    @apply absolute h-0 w-0 border-8 border-transparent border-t-border;
+    @apply absolute h-0 w-0 border-8 border-t-border border-transparent;
     bottom: -16px;
     left: 50%;
     transform: translateX(-50%);
