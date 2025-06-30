@@ -15,7 +15,7 @@
 
 **AI & APIs:**
 
-- **OpenAI API** – Quiz generation and PDF topic identification via AI SDK
+- **Google Gemini AI** – Quiz generation and PDF topic identification via AI SDK
 
 
 **Styling & UI:**

@@ -1,4 +1,4 @@
-import { openai } from "@ai-sdk/openai"
+import { google } from "@ai-sdk/google"
 import { generateObject } from "ai"
 import { z } from "zod"
 
@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     }
 
     const { object: topicResponse } = await generateObject({
-      model: openai("gpt-4o"),
+      model: google("gemini-1.5-flash"),
       schema: z.object({
         topic: z.string().describe("The main topic or subject of the document, summarized in 2-5 words."),
       }),
@@ -44,8 +44,19 @@ export async function POST(req: Request) {
       status: 200,
       headers: { "Content-Type": "application/json" },
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error(error)
+    
+    // Check if it's a quota/rate limit error
+    if (error?.message?.includes('quota') || error?.message?.includes('rate limit')) {
+      return new Response(JSON.stringify({ 
+        error: "API quota exceeded. Please try again later or check your Google AI API limits." 
+      }), {
+        status: 429,
+        headers: { "Content-Type": "application/json" },
+      })
+    }
+    
     return new Response(JSON.stringify({ error: "Failed to identify topic." }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
