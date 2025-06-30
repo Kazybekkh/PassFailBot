@@ -91,18 +91,18 @@
   }
   .eye {
     @apply w-12 h-12 rounded-xl;
-    background-image: linear-gradient(to bottom, #4facfe, #00f2fe);
+    background-image: radial-gradient(circle at center, #ffffff 20%, #89f7fe 70%, #66a6ff 100%);
     box-shadow: 0 0 15px 5px rgba(79, 172, 254, 0.6);
     transition: all 0.3s ease-in-out;
   }
   .eye-win {
     @apply h-14; /* Taller for "happy" expression */
-    background-image: linear-gradient(to bottom, #4caf50, #81c784);
+    background-image: radial-gradient(circle at center, #ffffff 20%, #a5d6a7 70%, #4caf50 100%);
     box-shadow: 0 0 15px 5px rgba(76, 175, 80, 0.6);
   }
   .eye-lose {
     @apply h-8; /* Shorter for "sad" expression */
-    background-image: linear-gradient(to bottom, #ff5252, #e57373);
+    background-image: radial-gradient(circle at center, #ffffff 20%, #ef9a9a 70%, #ff5252 100%);
     box-shadow: 0 0 15px 5px rgba(255, 82, 82, 0.6);
   }
 }
