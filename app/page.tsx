@@ -31,7 +31,7 @@ const RobotHead = ({ state }: { state: EyeState }) => (
   <div className={cn("relative flex h-48 w-48 items-center justify-center gap-4", state === "idle" && "animate-float")}>
     <div
       className={cn(
-        "h-10 w-10 rounded-sm bg-[#40bcff] border-2 border-gray-800 transition-all", // UPDATED: Specific hex color for eyes
+        "h-10 w-10 rounded-sm bg-[#40bcff] border-2 border-gray-800 transition-all",
         state === "focused" && "animate-squint",
         state === "win" && "bg-[hsl(var(--pass))] border-green-700 h-8",
         state === "lose" && "bg-[hsl(var(--fail))] border-red-700 h-12 w-8",
@@ -39,7 +39,7 @@ const RobotHead = ({ state }: { state: EyeState }) => (
     />
     <div
       className={cn(
-        "h-10 w-10 rounded-sm bg-[#40bcff] border-2 border-gray-800 transition-all", // UPDATED: Specific hex color for eyes
+        "h-10 w-10 rounded-sm bg-[#40bcff] border-2 border-gray-800 transition-all",
         state === "focused" && "animate-squint",
         state === "win" && "bg-[hsl(var(--pass))] border-green-700 h-8",
         state === "lose" && "bg-[hsl(var(--fail))] border-red-700 h-12 w-8",
@@ -97,6 +97,7 @@ export default function PassFailBot() {
 
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const reactionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const dialogueTimeoutRef = useRef<NodeJS.Timeout | null>(null) // UPDATED: Ref for dialogue timeout
 
   /* ────────────────── eye reactions helper ─────────────── */
   const triggerEyeState = useCallback((state: EyeState, durationMs = 800) => {
@@ -120,6 +121,7 @@ export default function PassFailBot() {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange)
       if (reactionTimeoutRef.current) clearTimeout(reactionTimeoutRef.current)
+      if (dialogueTimeoutRef.current) clearTimeout(dialogueTimeoutRef.current) // UPDATED: Cleanup dialogue timeout
     }
   }, [handleVisibilityChange])
 
@@ -152,7 +154,6 @@ export default function PassFailBot() {
 
   const handleNextStep = () => {
     triggerEyeState("focused")
-    // UPDATED: Removed setBotMessage calls
     switch (configStep) {
       case "upload":
         setConfigStep("target")
@@ -171,7 +172,6 @@ export default function PassFailBot() {
 
   const handlePrevStep = () => {
     triggerEyeState("focused")
-    // UPDATED: Removed setBotMessage calls
     switch (configStep) {
       case "target":
         setConfigStep("upload")
@@ -188,28 +188,38 @@ export default function PassFailBot() {
     }
   }
 
+  // UPDATED: All change handlers now use a 1.5s delay
   const handleTargetChange = (v: number) => {
     setTargetScore(v)
-    if (v === 100) setBotMessage("100%?! A perfect score... a bold and difficult challenge.")
-    else if (v >= 70) setBotMessage("Feeling confident, huh? A worthy goal.")
-    else if (v >= 40) setBotMessage("A reasonable target. Let's see if you can hit it.")
-    else setBotMessage("Playing it safe, I see. A wise strategy.")
+    if (dialogueTimeoutRef.current) clearTimeout(dialogueTimeoutRef.current)
+    dialogueTimeoutRef.current = setTimeout(() => {
+      if (v === 100) setBotMessage("100%?! A perfect score... a bold and difficult challenge.")
+      else if (v >= 70) setBotMessage("Feeling confident, huh? A worthy goal.")
+      else if (v >= 40) setBotMessage("A reasonable target. Let's see if you can hit it.")
+      else setBotMessage("Playing it safe, I see. A wise strategy.")
+    }, 1500)
   }
 
   const handleBetChange = (v: number) => {
     setBetAmount(v)
-    const ratio = v / coins
-    if (ratio === 1) setBotMessage("All in! Fortune favors the bold.")
-    else if (ratio > 0.75) setBotMessage("Going big! I like your style.")
-    else if (ratio > 0.25) setBotMessage("A respectable bet. Good luck!")
-    else setBotMessage("A cautious wager. I understand.")
+    if (dialogueTimeoutRef.current) clearTimeout(dialogueTimeoutRef.current)
+    dialogueTimeoutRef.current = setTimeout(() => {
+      const ratio = v / coins
+      if (ratio === 1) setBotMessage("All in! Fortune favors the bold.")
+      else if (ratio > 0.75) setBotMessage("Going big! I like your style.")
+      else if (ratio > 0.25) setBotMessage("A respectable bet. Good luck!")
+      else setBotMessage("A cautious wager. I understand.")
+    }, 1500)
   }
 
   const handleDurationChange = (v: number) => {
     setDuration(v)
-    if (v >= 60) setBotMessage("An hour should be plenty of time. No pressure!")
-    else if (v >= 30) setBotMessage(`${v} minutes. A good amount of time to focus.`)
-    else setBotMessage(`${v} minutes. Quick and decisive!`)
+    if (dialogueTimeoutRef.current) clearTimeout(dialogueTimeoutRef.current)
+    dialogueTimeoutRef.current = setTimeout(() => {
+      if (v >= 60) setBotMessage("An hour should be plenty of time. No pressure!")
+      else if (v >= 30) setBotMessage(`${v} minutes. A good amount of time to focus.`)
+      else setBotMessage(`${v} minutes. Quick and decisive!`)
+    }, 1500)
   }
 
   /* ────────────────── API / quiz start ─────────────────── */
