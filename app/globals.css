@@ -48,7 +48,12 @@
   }
 
   .eye {
-    /* FIXED: Added space between background and transition utilities */
+    /*
+      THE FIX IS HERE:
+      A space is added between the background color utility and the transition utility.
+      "bg-[hsl(var(--foreground))] transition-all" is correct.
+      "bg-[hsl(var(--foreground))]transition-all" is incorrect.
+    */
     @apply h-8 w-8 bg-[hsl(var(--foreground))] transition-all;
   }
 
